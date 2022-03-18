@@ -11,6 +11,7 @@ Provides
   - [EPICS softIoc for remote feedback](#epics-softioc-for-remote-feedback)
   - [Bluesky experiment control](#bluesky-experiment-control)
     - [instrument configuration](#instrument-configuration)
+    - [databroker catalog](#databroker-catalog)
     - [plans](#plans)
     - [bluesky-queueserver](#bluesky-queueserver)
     - [tiled data server](#tiled-data-server)
@@ -24,6 +25,10 @@ Provides
 ### instrument configuration
 
 - https://github.com/BCDA-APS/bluesky_training/tree/main/bluesky/instrument
+
+### databroker catalog
+
+catalog name: [`bdp2022`](/bdp2022_databroker.yml)
 
 ### plans
 
