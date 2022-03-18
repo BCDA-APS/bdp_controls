@@ -5,6 +5,7 @@
 
 record(mbbo, "$(P)busy") {
   field(DESC, "bluesky busy?")
+  field(VAL, 0)
 
   # when RunEngine is not ready
   field(ZRST, "unknown")
