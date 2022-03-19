@@ -14,13 +14,16 @@ from ..session_logs import logger
 
 logger.info(__file__)
 
+from ..devices import adsimdet
 from ..devices import coarse_xy
 from ..devices import fine_xy
-from ..devices import adsimdet
+from ..devices import image_file_name_as_written
 from ..devices import incident_beam
 from ..devices import shutter
-from bluesky import plans as bp
+from ..framework import cat
 from bluesky import plan_stubs as bps
+from bluesky import plans as bp
+import pathlib
 
 
 DIGITS = 5  # for rounding precision
@@ -118,5 +121,17 @@ def take_image(coarse=None, fine=None, md=None):
     _md.update(md or {})
 
     yield from open_shutter()
-    yield from bp.count([adsimdet], md=_md)
+    uid = yield from bp.count([adsimdet], md=_md)
     yield from close_shutter()
+
+    try:
+        # write the image file name to a PV
+        r = cat[uid].primary._get_resources()[0]
+        hfile = pathlib.Path(r["root"]) / r["resource_path"]
+        logger.info("Image file '%s' (exists: %s)", hfile, hfile.exists())
+        yield from bps.mv(image_file_name_as_written, str(hfile))
+    except Exception as exc:
+        # avoid crashing the plan just for this information
+        logger.warning("Exception involving name of image file: %s", exc)
+
+    return uid

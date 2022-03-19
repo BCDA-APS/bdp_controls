@@ -23,6 +23,7 @@ PZT_Y_PV: "gp:gp:float2"
 ADSIM_X_CALC_PV: "gp:userCalc9"
 ADSIM_Y_CALC_PV: "gp:userCalc10"
 INCIDENT_BEAM_SIMULATOR_CALC_PV: "gp:userCalc2"
+HDF5_FILE_NAME_PV: gp:gp:longtext1
 
 # permissions
 ALLOW_AREA_DETECTOR_WARMUP: false
