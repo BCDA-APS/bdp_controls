@@ -3,8 +3,8 @@
 # key:value pairs define instrument-specific configuration
 
 # instrument settings
-# DATABROKER_CATALOG: bdp2022
-DATABROKER_CATALOG: training
+DATABROKER_CATALOG: bdp2022
+# DATABROKER_CATALOG: training
 
 # default RunEngine metadata
 beamline_id: BDP
