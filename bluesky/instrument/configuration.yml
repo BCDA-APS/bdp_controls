@@ -1,0 +1,52 @@
+# configuration.yml
+
+# key:value pairs define instrument-specific configuration
+
+# instrument settings
+# DATABROKER_CATALOG: bdp2022
+DATABROKER_CATALOG: training
+
+# default RunEngine metadata
+beamline_id: BDP
+instrument_name: APS-U Beamline Data Pipelines project in 2022
+proposal_id: bdp2022
+
+# device PVs
+ADSIM_IOC_PREFIX: "ad:"
+GP_IOC_PREFIX: "gp:"
+XY_STAGE_X_PV: "gp:m9"
+XY_STAGE_Y_PV: "gp:m10"
+PZT_X_PV: "gp:gp:float1"
+PZT_Y_PV: "gp:gp:float2"
+ADSIM_X_CALC_PV: "gp:userCalc9"
+ADSIM_Y_CALC_PV: "gp:userCalc10"
+INCIDENT_BEAM_SIMULATOR_CALC_PV: "gp:userCalc2"
+
+# permissions
+ALLOW_AREA_DETECTOR_WARMUP: false
+ENABLE_AREA_DETECTOR_IMAGE_PLUGIN: true
+APS_IN_BASELINE: false
+ENABLE_CALCS: true
+USE_PROGRESS_BAR: false
+
+# ----------------------------------
+
+# default timeouts (seconds)
+PV_TIMEOUT: 60
+PV_WRITE_TIMEOUT: 60
+PV_CONNECTION_TIMEOUT: 60
+
+# Minimum software package version checks: MAJOR.minor (no .patch).
+# These will be converted to tuple() for comparisons.
+MINIMUM_PYTHON_VERSION:
+  - 3
+  - 7
+MINIMUM_BLUESKY_VERSION:
+  - 1
+  - 8
+MINIMUM_OPHYD_VERSION:
+  - 1
+  - 6
+MINIMUM_DATABROKER_VERSION:
+  - 1
+  - 2
