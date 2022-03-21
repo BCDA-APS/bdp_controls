@@ -26,8 +26,9 @@ CONSOLE_IO_FILE = _log_path / "ipython_console.log"
 # start logging console to file
 # https://ipython.org/ipython-doc/3/interactive/magics.html#magic-logstart
 _ipython = get_ipython()
-# %logstart -o -t .ipython_console.log "rotate"
-_ipython.magic(f"logstart -o -t {CONSOLE_IO_FILE} rotate")
+if _ipython is not None:
+    # %logstart -o -t .ipython_console.log "rotate"
+    _ipython.magic(f"logstart -o -t {CONSOLE_IO_FILE} rotate")
 
 logger = stdlogpj.standard_logging_setup(SESSION_NAME, IPYTHON_LOGGER, maxBytes=1 * MB, backupCount=9)
 logger.setLevel(logging.DEBUG)
