@@ -7,3 +7,27 @@ Need these two files to start the server and load the instrument:
 
 - `user_group_permissions.yaml` copied from the example
 - `starter.py` loads the instrument (the **only** `.py` file in this directory)
+
+## Try the server
+
+Starting from a local repository clone (in the root directory of the clone):
+
+### run server in a console
+
+```bash
+cd ./qserver
+conda activate queue_server
+start-re-manager --startup-dir ./
+```
+
+### Tell qserver to open an environment (in different console)
+
+```bash
+cd ./qserver
+conda activate queue_server
+qserver environment open
+```
+
+### New output in first console
+
+Check for new output in the console where  `start-re-manager` is running.
