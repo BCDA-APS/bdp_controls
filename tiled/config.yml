@@ -1,0 +1,12 @@
+# tiled server configuration
+
+# conda environment: tiled
+# run command:   tiled serve config --host 192.168.144.97 --port 8010 ./config.yml
+
+authentication:
+  allow_anonymous_access: true  # Turn this off for security.
+trees:
+- path: /bdp2022
+  tree: databroker.mongo_normalized:MongoAdapter.from_uri
+  args:
+    uri: mongodb://localhost:27017/bdp2022-bluesky
