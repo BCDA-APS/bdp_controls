@@ -1,0 +1,26 @@
+# template for each catalog shown below
+#
+#   {instrument}:  # <-- catalog name
+#     args:  # server: dbbluesky1, dbbluesky2, dbbluesky3, dbbluesky4
+#       asset_registry_db: mongodb://{server}.xray.aps.anl.gov:27017/{instrument}-bluesky
+#       metadatastore_db: mongodb://{server}.xray.aps.anl.gov:27017/{instrument}-bluesky
+#     driver: bluesky-mongo-normalized-catalog
+
+# usually stored in: ~/.local/share/intake/databroker_catalogs.yml
+#                or: ~/.local/share/intake/{instrument}.yml
+# might need to create that directory path
+#
+# run this snippet to find the list of paths where it looks on your system.
+
+#   python3 -c "import databroker; print(databroker.catalog_search_path())"
+
+# this next line appears *only* once in a .yml file
+sources:
+
+  # 2022-03-18
+  # Beamline Data Pipelines project
+  bdp2022:
+    args:
+      asset_registry_db: mongodb://dbbluesky4.xray.aps.anl.gov:27017/bdp2022-bluesky
+      metadatastore_db: mongodb://dbbluesky4.xray.aps.anl.gov:27017/bdp2022-bluesky
+    driver: bluesky-mongo-normalized-catalog
