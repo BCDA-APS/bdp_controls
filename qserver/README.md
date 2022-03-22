@@ -9,10 +9,105 @@ Need these two files to start the server and load the instrument:
 - `starter.py` loads the instrument (the **only** `.py` file in this directory)
 
 - [bluesky-queueserver](#bluesky-queueserver)
+  - [Runtime Operations](#runtime-operations)
+    - [qserver-console-monitor](#qserver-console-monitor)
+    - [RunEngine session](#runengine-session)
+    - [queue-server client](#queue-server-client)
+      - [Example](#example)
   - [Initial test of the server](#initial-test-of-the-server)
     - [run server in a console](#run-server-in-a-console)
     - [Tell qserver to open an environment (in different console)](#tell-qserver-to-open-an-environment-in-different-console)
     - [New output in first console](#new-output-in-first-console)
+
+## Runtime Operations
+
+Need 3 terminal windows
+
+### qserver-console-monitor
+
+```bash
+cd ./qserver
+conda activate queue_server
+qserver-console-monitor
+```
+
+- [docs](https://blueskyproject.io/bluesky-queueserver/cli_tools.html#qserver-console-monitor)
+
+### RunEngine session
+
+```bash
+cd ./qserver
+conda activate queue_server
+start-re-manager \
+    --startup-dir ./  \
+    --zmq-publish-console ON \
+    --databroker-config bdp2022
+```
+
+- [docs: pick databroker catalog](https://blueskyproject.io/bluesky-queueserver/cli_tools.html#instances-of-run-engine-and-databroker)
+- [docs: publish console output?](https://blueskyproject.io/bluesky-queueserver/cli_tools.html#instances-of-run-engine-and-databroker)
+- [docs: log verbosity](https://blueskyproject.io/bluesky-queueserver/cli_tools.html#other-configuration-parameters)
+
+### queue-server client
+
+This is where the user interacts with the queue-server.
+
+```bash
+cd ./qserver
+conda activate queue_server
+
+```
+
+command | description
+--- | ---
+`qserver environment open` | Load devices & plans, connect databroker, start `RE`
+`qserver environment close` | Stop `RE`
+`qserver allowed devices` | Display the list of allowed devices. 
+`qserver allowed plans` | Display the list of allowed plans. 
+`qserver history clear` | Clear the (short-term) history. 
+`qserver history get` | Show the (short-term) history. 
+`qserver queue add instruction -2 queue-stop` | Stop the queue two items before the end of the queue (before position  `-2`.) 
+`qserver queue add plan ${JSON_STRING}` | Add plan (json string) to the queue. 
+`qserver queue clear` | Clear the queue. 
+`qserver queue get` | Show the queue. 
+`qserver queue start` | Start the queue. 
+`qserver queue stop` | Stop the queue. 
+`qserver status \| grep re_state` | `'idle'` when ready to run new jobs
+`qserver status \| grep worker_environment_state` | `'idle'` when environment is open
+`qserver status` | Status information from the qserver
+
+- [docs: interacting with qserver](https://blueskyproject.io/bluesky-queueserver/tutorial.html#starting-the-queue-server)
+
+#### Example
+
+```bash
+cd ./qserver
+conda activate queue_server
+qserver environment open
+qserver status
+qserver queue add plan '{"name": "take_image"}'
+qserver status
+qserver history clear
+qserver queue clear
+qserver queue add plan '{"name": "move_coarse_positioner", "args": [2.71, 3.14]}'
+qserver queue add plan '{"name": "move_fine_positioner", "args": [.123, -0.456]}'
+qserver queue add plan '{"name": "take_image", "kwargs": {"md": {"task": "use the qserver"}}}'
+qserver queue add plan front '{"name": "set_acquire_time", "args": [0.5]}'
+qserver status
+qserver queue get
+qserver queue start
+```
+
+Another example (add jobs while queue is running):
+
+```bash
+qserver queue clear
+qserver queue add plan '{"name": "take_image", "kwargs": {"md": {"task": "use the qserver"}}}'
+qserver queue add plan '{"name": "take_image", "args": [], "kwargs": {"md": {"task": "use the qserver"}}}'
+qserver queue start
+qserver queue add plan '{"name": "move_fine_positioner", "args": [0, 0]}'
+qserver queue add plan '{"name": "move_coarse_positioner", "args": [0, 0]}'
+```
 
 ## Initial test of the server
 
