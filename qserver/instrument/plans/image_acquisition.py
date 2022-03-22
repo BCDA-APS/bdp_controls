@@ -3,10 +3,7 @@ Plans for the BPD 2022 project demonstration
 """
 
 __all__ = """
-    close_shutter
-    move_coarse_positioner
-    move_fine_positioner
-    open_shutter
+    set_acquire_time
     take_image
 """.split()
 
@@ -16,70 +13,52 @@ logger = logging.getLogger(__name__)
 logger.info(__file__)
 print(__file__)
 
-from ..iconfig_dict import iconfig
 from ..devices import adsimdet
-from ..devices import samplexy
 from ..devices import image_file_created
 from ..devices import incident_beam
-from ..devices import shutter
+from ..devices import samplexy
+from ..iconfig_dict import iconfig
+from .move_positioners import move_coarse_positioner
+from .move_positioners import move_fine_positioner
+from .shutter_controls import close_shutter
+from .shutter_controls import open_shutter
 from bluesky import plan_stubs as bps
 from bluesky import plans as bp
 import databroker
 import pathlib
 
 
-DIGITS = 5  # for rounding precision
+PTIME_EXTRA = 0.001
 cat = databroker.catalog[iconfig["DATABROKER_CATALOG"]]
 
 
-def open_shutter():
-    """Open the (simulated) shutter."""
-    if shutter.state != "open":
-        yield from bps.mv(shutter, "open")
-    else:
-        # MUST yield something
-        yield from bps.null()
+def set_acquire_time(atime, aperiod=None):
+    """
+    Set the acquire time & period of the area detector.
 
+    Parameters:
 
-def close_shutter():
-    """Close the (simulated) shutter."""
-    if shutter.state != "close":
-        yield from bps.mv(shutter, "close")
-    else:
-        # MUST yield something
-        yield from bps.null()
-
-
-def move_coarse_positioner(x, y):
-    """Move the coarse stage, only to new positions."""
-    args = []
-    xy_stage = samplexy.coarse
-    if round(xy_stage.x.position, DIGITS) != round(x, DIGITS):
-        args += [xy_stage.x, x]
-    if round(xy_stage.y.position, DIGITS) != round(y, DIGITS):
-        args += [xy_stage.y, y]
-    if len(args) > 0:
-        # only move if necessary
-        yield from bps.mv(*args)
-    else:
-        # MUST yield something
-        yield from bps.null()
-
-
-def move_fine_positioner(x, y):
-    """Move the fine stage, only to new positions."""
-    args = []
-    xy_stage = samplexy.fine
-    if round(xy_stage.x.get(), DIGITS) != round(x, DIGITS):
-        args += [xy_stage.x, x]
-    if round(xy_stage.y.get(), DIGITS) != round(y, DIGITS):
-        args += [xy_stage.y, y]
-    if len(args) > 0:
-        # only move if necessary
-        yield from bps.mv(*args)
-    else:
-        # MUST yield something
-        yield from bps.null()
+    atime float:
+        ``AcquireTime is`` the time to acquire the image (seconds).
+    aperiod float or ``None``:
+        ``AcquirePeriod is`` the time between image frames (seconds).
+        Should be ``AcquireTime < AcquirePeriod`` in most cases.
+        When ``aperiod`` is ``None``, then it will be set slightly
+        longer than ``atime``.
+    """
+    if atime <= 0:
+        raise ValueError(
+            f"Improper AcquireTime value, must be >0, received {atime}"
+        )
+    if aperiod is None or aperiod <= atime:
+        aperiod = atime + PTIME_EXTRA
+    
+    yield from bps.mv(
+        adsimdet.cam.acquire_time, atime,
+        adsimdet.cam.acquire_period, aperiod,
+    )
+    logger.info("area detector (%s) acquire time: %f", adsimdet.name, atime)
+    logger.info("area detector (%s) acquire period: %f", adsimdet.name, aperiod)
 
 
 def take_image(coarse=None, fine=None, md=None):
