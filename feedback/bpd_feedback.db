@@ -19,14 +19,21 @@ record(mbbo, "$(P)busy") {
 }
 
 record(waveform, "$(P)action") {
-  field(DESC, "command input")
+  field(DESC, "command input, 4k")
   field(DTYP, "Soft Channel")
-  field(NELM, "2048")
+  field(NELM, "4096")
   field(FTVL, "CHAR")
 }
 
 record(waveform, "$(P)status") {
-  field(DESC, "current message")
+  field(DESC, "current message, 4k")
+  field(DTYP, "Soft Channel")
+  field(NELM, "4096")
+  field(FTVL, "CHAR")
+}
+
+record(waveform, "$(P)ImageFileName") {
+  field(DESC, "image file name, 2k")
   field(DTYP, "Soft Channel")
   field(NELM, "2048")
   field(FTVL, "CHAR")
