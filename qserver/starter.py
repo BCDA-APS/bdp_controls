@@ -23,12 +23,16 @@ devices = (
     shutter,
 )
 
-print(f"{iconfig = }")
 
-table = pyRestTable.Table()
-table.labels = "device/object connected?".split()
-for obj in devices:
-    obj.wait_for_connection()
-    table.addRow((obj.name, obj.connected))
-    # print(f"{obj.name}.connected = {obj.connected}")
-print(table)
+def startup_report():
+    print(f"{iconfig = }")
+
+    table = pyRestTable.Table()
+    table.labels = "device/object connected?".split()
+    for _obj in devices:
+        _obj.wait_for_connection()
+        table.addRow((_obj.name, _obj.connected))
+    print(table)
+
+
+startup_report()
