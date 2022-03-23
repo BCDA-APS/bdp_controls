@@ -9,17 +9,76 @@ Need these two files to start the server and load the instrument:
 - `starter.py` loads the instrument (the **only** `.py` file in this directory)
 
 - [bluesky-queueserver](#bluesky-queueserver)
-  - [Runtime Operations](#runtime-operations)
+  - [v2 Runtime Operations](#v2-runtime-operations)
+    - [queueserver](#queueserver)
+    - [tiled](#tiled)
+    - [queueserver-monitor](#queueserver-monitor)
+  - [v1 Runtime Operations](#v1-runtime-operations)
     - [qserver-console-monitor](#qserver-console-monitor)
     - [RunEngine session](#runengine-session)
     - [queue-server client](#queue-server-client)
       - [Example](#example)
-  - [Initial test of the server](#initial-test-of-the-server)
+  - [v0 Initial test of the server](#v0-initial-test-of-the-server)
     - [run server in a console](#run-server-in-a-console)
     - [Tell qserver to open an environment (in different console)](#tell-qserver-to-open-an-environment-in-different-console)
     - [New output in first console](#new-output-in-first-console)
 
-## Runtime Operations
+## v2 Runtime Operations
+
+Need three servers running.
+
+### queueserver
+
+Runs the bluesky `RunEngine` in a terminal (or background such as `screen`):
+
+```bash
+cd ./qserver
+conda activate bluesky_2022_2
+start-re-manager \
+    --startup-dir ./  \
+    --zmq-publish-console ON \
+    --databroker-config bdp2022
+```
+
+### tiled
+
+```bash
+conda activate bluesky_2022_2
+tiled serve config \
+    --host "${HOST}" \
+    --port "${PORT}" \
+    --public \
+    ./tiled-config.yml
+```
+
+Use web browser to visit `http://${HOST}:${PORT}/`
+
+### queueserver-monitor
+
+Install via `conda` or `pip`:
+```
+conda install -n bluesky_2022_2 -c defaults -c conda-forge bluesky-widgets
+pip install bluesky-widgets
+```
+
+run the qserver:
+
+```bash
+conda activate bluesky_2022_2
+queue-monitor &
+```
+
+Alternative, is to run from source:
+
+```bash
+git clone https://github.com/bluesky/bluesky-widgets
+cd bluesky-widgets
+python -m bluesky_widgets.apps.queue_monitor.main &
+```
+
+----
+
+## v1 Runtime Operations
 
 Need 3 terminal windows
 
@@ -109,7 +168,10 @@ qserver queue add plan '{"name": "move_fine_positioner", "args": [0, 0]}'
 qserver queue add plan '{"name": "move_coarse_positioner", "args": [0, 0]}'
 ```
 
-## Initial test of the server
+----
+
+
+## v0 Initial test of the server
 
 Starting from a local repository clone (in the root directory of the clone):
 
