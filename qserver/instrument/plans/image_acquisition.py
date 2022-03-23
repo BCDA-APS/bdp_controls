@@ -52,11 +52,10 @@ def set_acquire_time(atime, aperiod=None):
         )
     if aperiod is None or aperiod <= atime:
         aperiod = atime + PTIME_EXTRA
-    
-    yield from bps.mv(
-        adsimdet.cam.acquire_time, atime,
-        adsimdet.cam.acquire_period, aperiod,
-    )
+
+    adsimdet.cam.stage_sigs["acquire_time"] = atime
+    adsimdet.cam.stage_sigs["acquire_period"] = aperiod
+
     logger.info("area detector (%s) acquire time: %f", adsimdet.name, atime)
     logger.info("area detector (%s) acquire period: %f", adsimdet.name, aperiod)
 
