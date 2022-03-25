@@ -13,28 +13,19 @@ file or directory | description
 
 - [bluesky-queueserver](#bluesky-queueserver)
   - [Runtime Operations](#runtime-operations)
-    - [graphical user interface](#graphical-user-interface)
     - [queueserver](#queueserver)
+    - [graphical user interface](#graphical-user-interface)
     - [tiled server](#tiled-server)
     - [queue-server client](#queue-server-client)
       - [Example](#example)
 
 ## Runtime Operations
 
-Need one terminal and one graphical user interface.
+Need one terminal and another one to start the graphical user interface.
+
+For now, start the `queueserver` *before* starting the `queue-monitor` (GUI).  You need to restart the GUI if you change the plans or devices since the GUI is not updating its list when the environment is opened (probably a bug).
 
 Optionally, start another terminal for the *tiled* server (which needs a separate conda environment with development, non-production, versions of databroker and tiled).
-
-### graphical user interface
-
-```bash
-cd ./qserver
-conda activate bluesky_2022_2
-queue-monitor &
-```
-
-- [docs](https://blueskyproject.io/bluesky-widgets/)
-- [`bluesky_2022_2`](https://github.com/BCDA-APS/use_bluesky/blob/main/install/environment_2022_1.yml)
 
 ### queueserver
 
@@ -50,17 +41,31 @@ queue-monitor &
         --databroker-config bdp2022
     ```
 
-2. Return to the queue-monitor started in the previous step.
+### graphical user interface
 
-   1. ***Connect*** with the queueserver process.  Wait for log
-      (at bottom) to show `Returning the list of runs for the running plan ...`
-   3. Select ***Edit and Control Queue*** from side tab bar.
-   4. ***Open*** the environment.  Wait for RE Manager Status
-      (at top right) to show: `RE Environment: OPEN`
-   5. Select ***Plan Editor*** tab
-   6. Build queue of plans using pop-up menu and complete form with plan's arguments.  For each new plan, edit and ***Add to queue***.
-   7. Re-arrange order of plans in ***QUEUE*** windows as desired.
-   8. ***Start*** processing the queue.
+```bash
+cd ./qserver
+conda activate bluesky_2022_2
+queue-monitor &
+```
+
+- [docs](https://blueskyproject.io/bluesky-widgets/)
+- [`bluesky_2022_2`](https://github.com/BCDA-APS/use_bluesky/blob/main/install/environment_2022_1.yml)
+
+In the graphical user interface just started:
+
+1. ***Connect*** with the queueserver process.  Wait for log (at bottom)
+  to show `Returning the list of runs for the running plan ...`
+2. Select ***Edit and Control Queue*** from side tab bar.
+3. ***Open*** the environment.  Wait for RE Manager Status (at top
+  right) to show: `RE Environment: OPEN`
+4. Select ***Plan Editor*** tab
+5. Build queue of plans using pop-up menu and complete the form with the
+   plan's arguments.  For each new plan, edit and ***Add to queue***.
+7. Re-arrange order of plans in ***QUEUE*** windows as desired.
+8. ***loop*** button will run the queue continuously until the queue
+   is stopped or the button is unpressed.
+10. ***Start*** processing the queue.
 
 - [docs: pick databroker catalog](https://blueskyproject.io/bluesky-queueserver/cli_tools.html#instances-of-run-engine-and-databroker)
 - [docs: publish console output?](https://blueskyproject.io/bluesky-queueserver/cli_tools.html#instances-of-run-engine-and-databroker)
@@ -68,17 +73,25 @@ queue-monitor &
 
 ### tiled server
 
-***tiled*** provides a data server to view acquired data.  Here, we only provide
-instructions to *access* an APS tiled server providing catalog (`bdp2022`) for the BDP data:
+[***tiled***](https://blueskyproject.io/tiled/) provides a data server
+to view acquired data (from databroker catalogs or local files).  Here, we
+only provide instructions to *access* an APS tiled server providing
+catalog (`bdp2022`) for the BDP data:
 
-In a web browser with access to the APS network, visit URL: http://wow.xray.aps.anl.gov:8010/ui/browse/bdp2022
+In a web browser with access to the APS network, visit
+URL: http://wow.xray.aps.anl.gov:8010/ui/browse/bdp2022
 
 Data from each measurement is presented by `uid` in chronolgocial order.  The
-most recent is presented at the *end* of the list.  (Yes, the interface is quite
-new and very focused yet on real user activities.)
+most recent is presented at the *end* of the list.  (Yes, the interface is
+quite new and not very focused yet on real user activities.)
 
 Click on the uid of interest.  Usually, the data to view is found by proceeding
-through this chain: *`uid`* -> *primary* -> *data* -> *adsimdet_image*
+through this chain: *`uid`* -> *primary* -> *data* -> *adsimdet_image*, 
+such as this example:
+http://wow.xray.aps.anl.gov:8010/ui/browse/bdp2022/bdded59a-3d07-441a-af18-35d72adac12b/primary/data/data_vars/adsimdet_image
+
+The tiled server can provide this same image data via a web socket
+request.  See the tiled documentation for details.
 
 ### queue-server client
 
