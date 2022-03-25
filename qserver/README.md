@@ -3,117 +3,90 @@
 Follow the
 [tutorial](https://blueskyproject.io/bluesky-queueserver/tutorial.html#running-re-manager-with-custom-startup-code)
 
-Need these two files to start the server and load the instrument:
+This directory needs these resources to start & run the queueserver:
 
-- `user_group_permissions.yaml` copied from the example
-- `starter.py` loads the instrument (the **only** `.py` file in this directory)
+file or directory | description
+--- | ---
+`instrument/` | the Python package with the devices and plans to be used
+`starter.py` | loads the instrument (the **only** `.py` file in this directory)
+`user_group_permissions.yaml` | copied from the `bluesky-queueserver` example
 
 - [bluesky-queueserver](#bluesky-queueserver)
-  - [v2 Runtime Operations](#v2-runtime-operations)
+  - [Runtime Operations](#runtime-operations)
+    - [graphical user interface](#graphical-user-interface)
     - [queueserver](#queueserver)
-    - [tiled](#tiled)
-    - [queueserver-monitor](#queueserver-monitor)
-  - [v1 Runtime Operations](#v1-runtime-operations)
-    - [qserver-console-monitor](#qserver-console-monitor)
-    - [RunEngine session](#runengine-session)
+    - [tiled server](#tiled-server)
     - [queue-server client](#queue-server-client)
       - [Example](#example)
-  - [v0 Initial test of the server](#v0-initial-test-of-the-server)
-    - [run server in a console](#run-server-in-a-console)
-    - [Tell qserver to open an environment (in different console)](#tell-qserver-to-open-an-environment-in-different-console)
-    - [New output in first console](#new-output-in-first-console)
 
-## v2 Runtime Operations
+## Runtime Operations
 
-Need three servers running.
+Need one terminal and one graphical user interface.
 
-### queueserver
+Optionally, start another terminal for the *tiled* server (which needs a separate conda environment with development, non-production, versions of databroker and tiled).
 
-Runs the bluesky `RunEngine` in a terminal (or background such as `screen`):
+### graphical user interface
 
 ```bash
 cd ./qserver
-conda activate bluesky_2022_2
-start-re-manager \
-    --startup-dir ./  \
-    --zmq-publish-console ON \
-    --databroker-config bdp2022
-```
-
-### tiled
-
-```bash
-conda activate bluesky_2022_2
-tiled serve config \
-    --host "${HOST}" \
-    --port "${PORT}" \
-    --public \
-    ./tiled-config.yml
-```
-
-Use web browser to visit `http://${HOST}:${PORT}/`
-
-### queueserver-monitor
-
-Install via `conda` or `pip`:
-```
-conda install -n bluesky_2022_2 -c defaults -c conda-forge bluesky-widgets
-pip install bluesky-widgets
-```
-
-run the qserver:
-
-```bash
 conda activate bluesky_2022_2
 queue-monitor &
 ```
+- [docs](https://blueskyproject.io/bluesky-widgets/)
 
-Alternative, is to run from source:
+### queueserver
 
-```bash
-git clone https://github.com/bluesky/bluesky-widgets
-cd bluesky-widgets
-python -m bluesky_widgets.apps.queue_monitor.main &
-```
+1. Start the bluesky queueserver.
 
-----
+    ```bash
+    cd ./qserver
+    conda activate bluesky_2022_2
+    start-re-manager \
+        --startup-dir ./  \
+        --update-existing-plans-devices ENVIRONMENT_OPEN \
+        --zmq-publish-console ON \
+        --databroker-config bdp2022
+    ```
 
-## v1 Runtime Operations
+2. Return to the queue-monitor started in the previous step.
 
-Need 3 terminal windows
-
-### qserver-console-monitor
-
-```bash
-cd ./qserver
-conda activate queue_server
-qserver-console-monitor
-```
-
-- [docs](https://blueskyproject.io/bluesky-queueserver/cli_tools.html#qserver-console-monitor)
-
-### RunEngine session
-
-```bash
-cd ./qserver
-conda activate queue_server
-start-re-manager \
-    --startup-dir ./  \
-    --zmq-publish-console ON \
-    --databroker-config bdp2022
-```
+   1. ***Connect*** with the queueserver process.  Wait for log
+      (at bottom) to show `Returning the list of runs for the running plan ...`
+   3. Select ***Edit and Control Queue*** from side tab bar.
+   4. ***Open*** the environment.  Wait for RE Manager Status
+      (at top right) to show: `RE Environment: OPEN`
+   5. Select ***Plan Editor*** tab
+   6. Build queue of plans using pop-up menu and complete form with plan's arguments.  For each new plan, edit and ***Add to queue***.
+   7. Re-arrange order of plans in ***QUEUE*** windows as desired.
+   8. ***Start*** processing the queue.
 
 - [docs: pick databroker catalog](https://blueskyproject.io/bluesky-queueserver/cli_tools.html#instances-of-run-engine-and-databroker)
 - [docs: publish console output?](https://blueskyproject.io/bluesky-queueserver/cli_tools.html#instances-of-run-engine-and-databroker)
 - [docs: log verbosity](https://blueskyproject.io/bluesky-queueserver/cli_tools.html#other-configuration-parameters)
 
+### tiled server
+
+***tiled*** provides a data server to view acquired data.  Here, we only provide
+instructions to *access* an APS tiled server providing catalog (`bdp2022`) for the BDP data:
+
+In a web browser with access to the APS network, visit URL: http://wow.xray.aps.anl.gov:8010/bdp2022
+
+Data from each measurement is presented by `uid` in chronolgocial order.  The
+most recent is presented at the *end* of the list.  (Yes, the interface is quite
+new and very focused yet on real user activities.)
+
+Click on the uid of interest.  Usually, the data to view is found by proceeding
+through this chain: *`uid`* -> *primary* -> *data* -> *adsimdet_image*
+
 ### queue-server client
 
-This is where the user interacts with the queue-server.
+- [docs: interacting with qserver](https://blueskyproject.io/bluesky-queueserver/tutorial.html#starting-the-queue-server)
+
+This (optional step) is where the user interacts with the queue-server from a command-line.
 
 ```bash
 cd ./qserver
-conda activate queue_server
+conda activate bluesky_2022_2
 
 ```
 
@@ -135,8 +108,6 @@ command | description
 `qserver status \| grep worker_environment_state` | `'idle'` when environment is open
 `qserver status` | Status information from the qserver
 
-- [docs: interacting with qserver](https://blueskyproject.io/bluesky-queueserver/tutorial.html#starting-the-queue-server)
-
 #### Example
 
 ```bash
@@ -148,10 +119,12 @@ qserver queue add plan '{"name": "take_image"}'
 qserver status
 qserver history clear
 qserver queue clear
-qserver queue add plan '{"name": "move_coarse_positioner", "args": [2.71, 3.14]}'
-qserver queue add plan '{"name": "move_fine_positioner", "args": [.123, -0.456]}'
-qserver queue add plan '{"name": "take_image", "kwargs": {"md": {"task": "use the qserver"}}}'
-qserver queue add plan front '{"name": "set_acquire_time", "args": [0.5]}'
+qserver queue add plan '{"name": "take_image", "args": [.5], "kwargs": {"md": {"task": "demonstrate the qserver", "frame_type": "image"}}}'
+qserver queue add plan front '{"name": "open_shutter"}'
+qserver queue add plan front '{"name": "move_coarse_positioner", "args": [2.71, 3.14]}'
+qserver queue add plan front '{"name": "move_fine_positioner", "args": [.123, -0.456]}'
+qserver queue add plan '{"name": "close_shutter"}'
+qserver queue add plan '{"name": "take_image", "args": [.5], "kwargs": {"md": {"task": "demonstrate the qserver", "frame_type": "dark"}}}'
 qserver status
 qserver queue get
 qserver queue start
@@ -161,36 +134,8 @@ Another example (add jobs while queue is running):
 
 ```bash
 qserver queue clear
-qserver queue add plan '{"name": "take_image", "kwargs": {"md": {"task": "use the qserver"}}}'
-qserver queue add plan '{"name": "take_image", "args": [], "kwargs": {"md": {"task": "use the qserver"}}}'
+qserver queue add plan '{"name": "take_image", "args": [.5], "kwargs": {"md": {"task": "use the qserver"}}}'
 qserver queue start
 qserver queue add plan '{"name": "move_fine_positioner", "args": [0, 0]}'
 qserver queue add plan '{"name": "move_coarse_positioner", "args": [0, 0]}'
 ```
-
-----
-
-
-## v0 Initial test of the server
-
-Starting from a local repository clone (in the root directory of the clone):
-
-### run server in a console
-
-```bash
-cd ./qserver
-conda activate queue_server
-start-re-manager --startup-dir ./
-```
-
-### Tell qserver to open an environment (in different console)
-
-```bash
-cd ./qserver
-conda activate queue_server
-qserver environment open
-```
-
-### New output in first console
-
-Check for new output in the console where  `start-re-manager` is running.
