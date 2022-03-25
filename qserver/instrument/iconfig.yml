@@ -14,16 +14,16 @@ instrument_name: APS-U Beamline Data Pipelines project in 2022
 proposal_id: bdp2022
 
 # device PVs
-ADSIM_IOC_PREFIX: "ad:"
-GP_IOC_PREFIX: "gp:"
-XY_STAGE_X_PV: "gp:m9"
-XY_STAGE_Y_PV: "gp:m10"
-PZT_X_PV: "gp:gp:float1"
-PZT_Y_PV: "gp:gp:float2"
-ADSIM_X_CALC_PV: "gp:userCalc9"
-ADSIM_Y_CALC_PV: "gp:userCalc10"
-INCIDENT_BEAM_SIMULATOR_CALC_PV: "gp:userCalc2"
-HDF5_FILE_NAME_PV: gp:gp:longtext1
+ADSIM_IOC_PREFIX: "bdpad:"
+GP_IOC_PREFIX: "bdp:"
+XY_STAGE_X_PV: "bdp:m9"
+XY_STAGE_Y_PV: "bdp:m10"
+PZT_X_PV: "bdp:gp:float1"
+PZT_Y_PV: "bdp:gp:float2"
+ADSIM_X_CALC_PV: "bdp:userCalc9"
+ADSIM_Y_CALC_PV: "bdp:userCalc10"
+INCIDENT_BEAM_SIMULATOR_CALC_PV: "bdp:userCalc2"
+HDF5_FILE_NAME_PV: bdp:gp:longtext1
 
 # permissions
 ALLOW_AREA_DETECTOR_WARMUP: false

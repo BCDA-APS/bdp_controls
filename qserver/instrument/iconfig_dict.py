@@ -6,8 +6,8 @@ Example YAML configuration file::
 
     # simple key:value pairs
 
-    ADSIM_IOC_PREFIX: "ad:"
-    GP_IOC_PREFIX: "gp:"
+    ADSIM_IOC_PREFIX: "bdpad:"
+    GP_IOC_PREFIX: "bdp:"
     catalog: bdp2022
 """
 
@@ -23,7 +23,7 @@ import pathlib
 import yaml
 
 
-CONFIG_FILE = pathlib.Path(__file__).absolute().parent / "configuration.yml"
+CONFIG_FILE = pathlib.Path(__file__).absolute().parent / "iconfig.yml"
 
 if CONFIG_FILE.exists():
     iconfig = yaml.load(open(CONFIG_FILE, "r").read(), yaml.Loader)
