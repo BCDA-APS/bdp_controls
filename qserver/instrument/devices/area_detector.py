@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 logger.info(__file__)
 print(__file__)
 
-from ..iconfig_dict import iconfig
+from .. import iconfig
 from .calculation_records import incident_beam_calc
 from .calculation_records import ad_x_calc, ad_y_calc
 from ophyd import ADComponent
@@ -32,11 +32,12 @@ import numpy as np
 import pathlib
 
 
-IMAGE_DIR = "adsimdet/%Y/%m/%d"
-AD_IOC_MOUNT_PATH = pathlib.Path("/tmp")
-BLUESKY_MOUNT_PATH = pathlib.Path("/tmp/docker_ioc/iocad/tmp")
 
-# MUST end with a `/`
+AD_IOC_MOUNT_PATH = pathlib.Path(iconfig["AD_IMAGE_PATH"])
+BLUESKY_MOUNT_PATH = pathlib.Path(iconfig["BLUESKY_IMAGE_PATH"])
+IMAGE_DIR = "adsimdet/%Y/%m/%d"
+
+# MUST end with a `/` (which pathlib will not provide)
 WRITE_PATH_TEMPLATE = f"{AD_IOC_MOUNT_PATH / IMAGE_DIR}/"
 READ_PATH_TEMPLATE = f"{BLUESKY_MOUNT_PATH / IMAGE_DIR}/"
 
@@ -156,7 +157,7 @@ if iconfig.get("ENABLE_AREA_DETECTOR_IMAGE_PLUGIN", False):
 # Even with `lazy_open=1`, ophyd checks if the area
 # detector HDF5 plugin has been primed.  We might
 # need to prime it.  Here's ophyd's test:
-WARMUP_OK = iconfig.get("ALLOW_AREA_DETECTOR_WARMUP", "ad:")
+WARMUP_OK = iconfig.get("ALLOW_AREA_DETECTOR_WARMUP", False)
 if WARMUP_OK and (np.array(adsimdet.hdf1.array_size.get()).sum() == 0):
     logger.info(f"Priming {adsimdet.hdf1.name} ...")
     adsimdet.hdf1.warmup()
