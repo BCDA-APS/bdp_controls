@@ -71,7 +71,7 @@ queue-monitor &
 ***tiled*** provides a data server to view acquired data.  Here, we only provide
 instructions to *access* an APS tiled server providing catalog (`bdp2022`) for the BDP data:
 
-In a web browser with access to the APS network, visit URL: http://wow.xray.aps.anl.gov:8010/bdp2022
+In a web browser with access to the APS network, visit URL: http://wow.xray.aps.anl.gov:8010/ui/browse/bdp2022
 
 Data from each measurement is presented by `uid` in chronolgocial order.  The
 most recent is presented at the *end* of the list.  (Yes, the interface is quite
