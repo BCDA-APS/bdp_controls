@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 logger.info(__file__)
 print(__file__)
 
-from ..iconfig_dict import iconfig
+from .. import iconfig
 from ophyd import Component, Device, EpicsSignalRO
 
 

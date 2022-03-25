@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 logger.info(__file__)
 print(__file__)
 
-# from ..iconfig_dict import iconfig
+# from .. import iconfig
 from .calculation_records import incident_beam_calc as calc
 from .simulated_shutter import shutter
 import math

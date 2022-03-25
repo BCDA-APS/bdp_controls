@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 logger.info(__file__)
 print(__file__)
 
-from ..iconfig_dict import iconfig
+from .. import iconfig
 from apstools.synApps import SwaitRecord
 from ophyd import EpicsSignal
 
