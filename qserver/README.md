@@ -117,8 +117,6 @@ cd ./qserver
 conda activate queue_server
 qserver environment open
 qserver status
-qserver queue add plan '{"name": "take_image"}'
-qserver status
 qserver history clear
 qserver queue clear
 qserver queue add plan '{"name": "take_image", "args": [.5], "kwargs": {"md": {"task": "demonstrate the qserver", "frame_type": "image"}}}'
