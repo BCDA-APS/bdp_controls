@@ -32,6 +32,7 @@ cd ./qserver
 conda activate bluesky_2022_2
 queue-monitor &
 ```
+
 - [docs](https://blueskyproject.io/bluesky-widgets/)
 
 ### queueserver
