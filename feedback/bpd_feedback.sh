@@ -5,7 +5,7 @@
 #--------------------
 # change the program defaults here
 DEFAULT_SESSION_NAME=bpd_feedback
-DEFAULT_IOC_PREFIX=bpdfb:
+DEFAULT_IOC_PREFIX=bdpapi:
 #--------------------
 
 SHELL_SCRIPT_NAME=${BASH_SOURCE:-${0}}
