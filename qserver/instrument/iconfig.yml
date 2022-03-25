@@ -23,7 +23,7 @@ PZT_Y_PV: "bdp:gp:float2"
 ADSIM_X_CALC_PV: "bdp:userCalc9"
 ADSIM_Y_CALC_PV: "bdp:userCalc10"
 INCIDENT_BEAM_SIMULATOR_CALC_PV: "bdp:userCalc2"
-HDF5_FILE_NAME_PV: bdp:gp:longtext1
+HDF5_FILE_NAME_PV: bdpapi:ImageFileName
 
 # paths
 AD_IMAGE_PATH: /tmp
