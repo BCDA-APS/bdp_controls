@@ -34,6 +34,7 @@ queue-monitor &
 ```
 
 - [docs](https://blueskyproject.io/bluesky-widgets/)
+- [`bluesky_2022_2`](https://github.com/BCDA-APS/use_bluesky/blob/main/install/environment_2022_1.yml)
 
 ### queueserver
 
