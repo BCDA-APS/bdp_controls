@@ -10,12 +10,12 @@ logger = logging.getLogger(__name__)
 logger.info(__file__)
 print(__file__)
 
+from .. import iconfig
 from ..devices import adsimdet
 from ..devices import image_file_created
 from ..devices import incident_beam
 from ..devices import samplexy
 from ..devices import shutter
-from ..iconfig_dict import iconfig
 from .move_positioners import move_coarse_positioner
 from .move_positioners import move_fine_positioner
 from .shutter_controls import close_shutter
