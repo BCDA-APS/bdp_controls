@@ -27,27 +27,20 @@ For now, start the `queueserver` *before* starting the `queue-monitor` (GUI).  Y
 
 Optionally, start another terminal for the *tiled* server (which needs a separate conda environment with development, non-production, versions of databroker and tiled).
 
-### queueserver
-
-1. Start the bluesky queueserver.
-
-    ```bash
-    cd ./qserver
-    conda activate bluesky_2022_2
-    start-re-manager \
-        --startup-dir ./  \
-        --update-existing-plans-devices ENVIRONMENT_OPEN \
-        --zmq-publish-console ON \
-        --databroker-config bdp2022
-    ```
-
-### graphical user interface
+All the commands in this section assume these commands have been run first:
 
 ```bash
 cd ./qserver
-conda activate bluesky_2022_2
-queue-monitor &
+conda activate bdp2022
 ```
+
+### queueserver
+
+Start the bluesky queueserver:  `./qserver.sh start`
+
+### graphical user interface
+
+Start the GUI: `queue-monitor &`
 
 - [docs](https://blueskyproject.io/bluesky-widgets/)
 - [`bluesky_2022_2`](https://github.com/BCDA-APS/use_bluesky/blob/main/install/environment_2022_1.yml)
@@ -73,6 +66,8 @@ In the graphical user interface just started:
 
 ### tiled server
 
+work-in-progress
+
 [***tiled***](https://blueskyproject.io/tiled/) provides a data server
 to view acquired data (from databroker catalogs or local files).  Here, we
 only provide instructions to *access* an APS tiled server providing
@@ -86,8 +81,8 @@ most recent is presented at the *end* of the list.  (Yes, the interface is
 quite new and not very focused yet on real user activities.)
 
 Click on the uid of interest.  Usually, the data to view is found by proceeding
-through this chain: *`uid`* -> *primary* -> *data* -> *adsimdet_image*, 
-such as this example:
+through this chain: *`uid`* -> *primary* -> *data* -> *adsimdet_image*, such as
+this example:
 http://wow.xray.aps.anl.gov:8010/ui/browse/bdp2022/bdded59a-3d07-441a-af18-35d72adac12b/primary/data/data_vars/adsimdet_image
 
 The tiled server can provide this same image data via a web socket
@@ -98,12 +93,6 @@ request.  See the tiled documentation for details.
 - [docs: interacting with qserver](https://blueskyproject.io/bluesky-queueserver/tutorial.html#starting-the-queue-server)
 
 This (optional step) is where the user interacts with the queue-server from a command-line.
-
-```bash
-cd ./qserver
-conda activate bluesky_2022_2
-
-```
 
 command | description
 --- | ---
