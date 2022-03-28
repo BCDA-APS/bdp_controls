@@ -3,6 +3,7 @@ Load devices and plans for bluesky queueserver.
 """
 
 import pathlib, sys
+
 sys.path.append(
     str(pathlib.Path(__file__).absolute().parent)
 )
@@ -25,13 +26,23 @@ devices = (
 
 
 def startup_report():
-    print(f"{iconfig = }")
+    table = pyRestTable.Table()
+    table.labels = "key value".split()
+    for k, v in sorted(iconfig.items()):
+        table.addRow((k, v))
+    print("instrument configuration (iconfig):")
+    print(table)
 
     table = pyRestTable.Table()
-    table.labels = "device/object connected?".split()
+    table.labels = "device/object connected? prefix/pvname".split()
     for _obj in devices:
         _obj.wait_for_connection()
-        table.addRow((_obj.name, _obj.connected))
+        p = ""
+        for aname in "pvname prefix".split():
+            if hasattr(_obj, aname):
+                p = getattr(_obj, aname)
+        table.addRow((_obj.name, _obj.connected, p))
+    print("Devices and signals:")
     print(table)
 
 
