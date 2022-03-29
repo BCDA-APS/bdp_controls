@@ -15,6 +15,7 @@ file or directory | description
   - [Runtime Operations](#runtime-operations)
     - [queueserver](#queueserver)
     - [graphical user interface](#graphical-user-interface)
+      - [spreadsheet files](#spreadsheet-files)
     - [tiled server](#tiled-server)
     - [queue-server client](#queue-server-client)
       - [Example](#example)
@@ -64,9 +65,17 @@ In the graphical user interface just started:
 - [docs: publish console output?](https://blueskyproject.io/bluesky-queueserver/cli_tools.html#instances-of-run-engine-and-databroker)
 - [docs: log verbosity](https://blueskyproject.io/bluesky-queueserver/cli_tools.html#other-configuration-parameters)
 
+#### spreadsheet files
+
+It is possible to define a batch of plans from a spreadsheet
+file.  See these two example files:
+
+* `batch2.xlsx`
+* `small_batch.xlsx`
+
 ### tiled server
 
-work-in-progress
+work-in-progress (moving to [tiled](../tiled/README.md) directory)
 
 [***tiled***](https://blueskyproject.io/tiled/) provides a data server
 to view acquired data (from databroker catalogs or local files).  Here, we
