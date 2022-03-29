@@ -9,7 +9,11 @@ DATABROKER_CATALOG=bdp2022
 #--------------------
 
 # activate conda environment
-CONDA_BASE_DIR=/opt/miniconda3/bin
+
+CONDA_BASE_DIR=/APSshare/miniconda/x86_64/bin
+if [ ! -d "${CONDA_BASE_DIR}" ]; then
+    CONDA_BASE_DIR=/opt/miniconda3/bin
+fi
 source "${CONDA_BASE_DIR}/activate" "${CONDA_ENVIRONMENT}"
 
 SHELL_SCRIPT_NAME=${BASH_SOURCE:-${0}}
