@@ -23,11 +23,44 @@ from .shutter_controls import open_shutter
 from bluesky import plan_stubs as bps
 from bluesky import plans as bp
 import databroker
+import datetime
 import pathlib
 
 
 APERIOD_EXTRA = 0.001
 cat = databroker.catalog[iconfig["DATABROKER_CATALOG"]]
+
+
+def update_cross_reference_file(run_uid, image_name):
+    """
+    Remember which bluesky run contains image file (base name).
+
+    For example, given an image file named:
+    ``/path/to/2022/03/29/a4700b27-2666-44cf-a86f_000.h5``,
+    associate ``a4700b27-2666-44cf-a86f_000`` with the
+    ``run_uid`` provided.
+
+    Append the data to a YAML-formatted text file.
+    """
+    path = pathlib.Path(iconfig["IMAGE_RUN_XREF_FILE"])
+    write_header = not path.exists()
+
+    with open(str(path.absolute()), "a") as f:
+        if write_header:
+            logger.info(
+                "Creating cross-reference file: %s",
+                str(path.absolute())
+            )
+            f.write(
+                f"# file: {path}\n"
+                f"# created: {datetime.datetime.now()}\n"
+                "# purpose: cross-reference bluesky run uid and HDF5 file name\n"
+                "\n"
+            )
+        f.write(
+            f"{run_uid}: {image_name.stem}\n"
+            f"{image_name.stem}: {run_uid}\n"
+        )
 
 
 def take_image(atime, aperiod=None, md=None):
@@ -96,6 +129,7 @@ def take_image(atime, aperiod=None, md=None):
         print(f"DIAGNOSTIC: {hdffile = },  {hdffile.exists()=}")
         logger.info("Image file '%s' (exists: %s)", hdffile, hdffile.exists())
         yield from bps.mv(image_file_created, str(hdffile))
+        update_cross_reference_file(uid, hdffile)
     except Exception as exc:
         # avoid crashing the plan just for this information
         print(f"Exception involving name of image file: {exc}")
