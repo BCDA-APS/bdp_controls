@@ -4,7 +4,7 @@
 
 #--------------------
 # change the program defaults here
-DEFAULT_SESSION_NAME=bpd_feedback
+DEFAULT_SESSION_NAME=bdp_feedback
 DEFAULT_IOC_PREFIX=bdpapi:
 #--------------------
 
@@ -15,7 +15,7 @@ IOC_PREFIX=${3:-"${DEFAULT_IOC_PREFIX}"}
 
 IOC_BINARY=softIoc
 CAPUT=caput
-EPICS_DATABASE=bpd_feedback.db
+EPICS_DATABASE=bdp_feedback.db
 START_IOC_COMMAND="${IOC_BINARY} -m P=${IOC_PREFIX} -d ${EPICS_DATABASE}"
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
