@@ -1,5 +1,6 @@
 # Bluesky queueserver
 qserver/existing_plans_and_devices.yaml
+qserver/xref_image_run.yml
 
 # VSCode editor
 .vscode/
