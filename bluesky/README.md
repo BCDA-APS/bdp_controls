@@ -18,17 +18,17 @@ measurement [*plans*](https://blueskyproject.io/bluesky/plans.html).
 
 ## Operations
 
-1.  Activate the bpd2022``conda environment:
+1.  Activate the bdp2022``conda environment:
 
     ```bash
-    (base) user@localhost $ conda activate bpd2022
-    (bpd2022) user@localhost $
+    (base) user@localhost $ conda activate bdp2022
+    (bdp2022) user@localhost $
     ```
 
 2.  Start an ipython console session:
 
     ```bash
-    (bpd2022) user@localhost $ ipython
+    (bdp2022) user@localhost $ ipython
     ```
 
 3.  Note the [instrument configuration file](instrument/configuration.yml).
@@ -200,7 +200,7 @@ The `gp_stats` object has metadata about an EPICS IOC providing the motor suppor
 ## Plans
 
 These are the plans (measurement procedures) provided in
-[`bpd_simulation.py`](instrument/plans/bpd_simulation.py):
+[`bpd_simulation.py`](instrument/plans/bdp_simulation.py):
 
 plan | arguments | docstring
 --- | --- | ---

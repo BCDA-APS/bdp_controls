@@ -22,9 +22,12 @@ Provides
 
 ## Bluesky experiment control
 
+See the [bluesky-queueserver](#bluesky-queueserver) section below.
+
 ### instrument configuration
 
-- https://github.com/BCDA-APS/bluesky_training/tree/main/bluesky/instrument
+The instrument configuration is based on the [bluesky_training](https://github.com/BCDA-APS/bluesky_training/tree/main/bluesky/instrument) repository.
+It is defined here in the `qserver/instrument` directory.
 
 ### databroker catalog
 
@@ -32,14 +35,18 @@ catalog name: [`bdp2022`](/bdp2022_databroker.yml)
 
 ### plans
 
+See the plans listed as the queueserver environment is opened (which loads the instrument devices & plans and starts a RunEngine instance).
+
 ### bluesky-queueserver
 
-(a stretch goal but will try this first)
+See [README](/qserver/README.md)
 
 - https://github.com/bluesky/bluesky-queueserver
 - https://github.com/bluesky/bluesky-queueserver-api
 - https://github.com/bluesky/bluesky-httpserver
 
 ### tiled data server
+
+See the [README](/tiled/README.md) in the `tiled` section.
 
 - https://github.com/bluesky/tiled

@@ -87,7 +87,9 @@ if configuration_dict.get("USE_PROGRESS_BAR", False):
     RE.waiting_hook = pbar_manager
 
 # Register bluesky IPython magics.
-get_ipython().register_magics(BlueskyMagics)
+_ipython = get_ipython()
+if _ipython is not None:
+    get_ipython().register_magics(BlueskyMagics)
 
 # Set up the BestEffortCallback.
 bec = BestEffortCallback()

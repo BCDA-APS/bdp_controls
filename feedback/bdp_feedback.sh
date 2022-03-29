@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# manage the IOC for apsbss
+# manage the IOC for the BDP project feedback API
 
 #--------------------
 # change the program defaults here
-DEFAULT_SESSION_NAME=bpd_feedback
-DEFAULT_IOC_PREFIX=bpdfb:
+DEFAULT_SESSION_NAME=bdp_feedback
+DEFAULT_IOC_PREFIX=bdpapi:
 #--------------------
 
 SHELL_SCRIPT_NAME=${BASH_SOURCE:-${0}}
@@ -15,7 +15,7 @@ IOC_PREFIX=${3:-"${DEFAULT_IOC_PREFIX}"}
 
 IOC_BINARY=softIoc
 CAPUT=caput
-EPICS_DATABASE=bpd_feedback.db
+EPICS_DATABASE=bdp_feedback.db
 START_IOC_COMMAND="${IOC_BINARY} -m P=${IOC_PREFIX} -d ${EPICS_DATABASE}"
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
