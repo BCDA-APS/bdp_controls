@@ -12,6 +12,7 @@ file or directory | description
 `user_group_permissions.yaml` | copied from the `bluesky-queueserver` example
 
 - [bluesky-queueserver](#bluesky-queueserver)
+  - [Instrument](#instrument)
   - [Runtime Operations](#runtime-operations)
     - [queueserver](#queueserver)
     - [graphical user interface](#graphical-user-interface)
@@ -19,6 +20,36 @@ file or directory | description
     - [tiled server](#tiled-server)
     - [queue-server client](#queue-server-client)
       - [Example](#example)
+
+## Instrument
+
+Table of Devices and signals:
+
+```
+================== ==================== ==========
+device/object      pvprefix/pvname      connected?
+================== ==================== ==========
+ad_x_calc          bdp:userCalc9        True      
+ad_y_calc          bdp:userCalc10       True      
+adsimdet           bdpad:               True      
+gp_stats           bdp:                 True      
+image_file_created bdpapi:ImageFileName True      
+incident_beam      bdp:userCalc2        True      
+incident_beam_calc bdp:userCalc2        True      
+samplexy                                True      
+shutter                                 True      
+================== ==================== ==========
+```
+
+List of Plans:
+
+* `close_shutter()`
+* `move_coarse_positioner(x, y)`
+* `move_fine_positioner(x, y)`
+* `open_shutter()`
+* `prime_hdf_plugin()`
+* `sleep(time)`
+* `take_image(atime, aperiod=None, md=None)`
 
 ## Runtime Operations
 
