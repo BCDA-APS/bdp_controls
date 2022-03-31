@@ -16,9 +16,12 @@ conda create -y \
 
 conda activate "${ENV_NAME}"
 
+# see PyMongo version dependency table
+#  https://www.mongodb.com/docs/drivers/pymongo/#mongodb-compatibility
+# APS has Mongod version 3.4.20, so pymongo<4 is the requirement from the table
 pip install \
   event_model \
-  pymongo
+  "pymongo<4"
 
 pip install --pre \
   databroker \
