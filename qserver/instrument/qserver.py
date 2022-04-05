@@ -1,4 +1,3 @@
-
 """
 Define devices and plans for bluesky-queueserver
 """

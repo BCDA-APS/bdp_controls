@@ -8,10 +8,10 @@
 # instrument settings
 DATABROKER_CATALOG: bdp2022
 
-# default RunEngine metadata
-beamline_id: BDP
-instrument_name: APS-U Beamline Data Pipelines project in 2022
-proposal_id: bdp2022
+RUNENGINE_METADATA:
+  beamline_id: BDP
+  instrument_name: APS-U Beamline Data Pipelines project in 2022
+  proposal_id: bdp2022
 
 # device PVs
 ADSIM_IOC_PREFIX: "bdpad:"
