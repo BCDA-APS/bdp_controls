@@ -6,7 +6,7 @@ Ophyd Devices for Bluesky measurements.
 from . import default_timeouts
 
 # define the devices
-# from .aps_source import *
+from .aps_source import *
 from .calculation_records import *
 from .feedback_api import *
 from .ioc_stats import *

@@ -2,7 +2,7 @@
 Define RE for bluesky-queueserver
 """
 
-__all__ = ["RE", ]
+__all__ = ["RE", "sd"]
 
 import logging
 logger = logging.getLogger(__name__)
@@ -56,3 +56,7 @@ RE.md["login_id"] = USERNAME + "@" + HOSTNAME
 RE.md.update(iconfig.get("RUNENGINE_METADATA", {}))
 RE.md["versions"] = versions
 RE.md["pid"] = os.getpid()
+
+# Set up SupplementalData.
+sd = bluesky.SupplementalData()
+RE.preprocessors.append(sd)
