@@ -2,6 +2,11 @@
 
 # manage the bluesky queueserver
 
+__ALL__ = """
+    RE
+    cat
+""".split()
+
 #--------------------
 # change the program defaults here
 CONDA_ENVIRONMENT=bdp2022
@@ -26,4 +31,4 @@ start-re-manager \
     --startup-dir "${STARTUP_DIR}" \
     --update-existing-plans-devices ENVIRONMENT_OPEN \
     --zmq-publish-console ON \
-    --databroker-config "${DATABROKER_CATALOG}"
+    --keep-re
