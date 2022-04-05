@@ -8,6 +8,12 @@ qserver/xref_image_run.yml
 # Bluesky session logs
 .logs/
 
+# NFS server droppings
+.nfs0*
+
+# APS IT droppings
+.loglogin
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
