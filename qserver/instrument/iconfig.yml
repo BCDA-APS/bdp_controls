@@ -26,8 +26,9 @@ INCIDENT_BEAM_SIMULATOR_CALC_PV: "bdp:userCalc2"
 HDF5_FILE_NAME_PV: bdpapi:ImageFileName
 
 # paths
-AD_IMAGE_PATH: /tmp
-BLUESKY_IMAGE_PATH: /tmp/docker_ioc/iocbdpad/tmp
+ADIOC_IMAGE_ROOT: /tmp
+BLUESKY_IMAGE_ROOT: /tmp/docker_ioc/iocbdpad/tmp
+AD_IMAGE_SUBDIR: "adsimdet/%Y/%m/%d/"
 IMAGE_RUN_XREF_FILE: xref_image_run.yml
 
 # permissions

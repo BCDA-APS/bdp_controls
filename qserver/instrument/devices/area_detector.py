@@ -21,30 +21,37 @@ from .calculation_records import incident_beam_calc
 from .calculation_records import ad_x_calc, ad_y_calc
 from ophyd import ADComponent
 from ophyd import DetectorBase
+from ophyd import EpicsSignal
 from ophyd import EpicsSignalWithRBV
 from ophyd import SimDetectorCam
 from ophyd import SingleTrigger
-from ophyd.areadetector.filestore_mixins import FileStoreHDF5IterativeWrite
+from ophyd.areadetector.filestore_mixins import FileStoreHDF5IterativeWrite, new_short_uid
 from ophyd.areadetector.plugins import HDF5Plugin_V34
 from ophyd.areadetector.plugins import ImagePlugin_V34
 from ophyd.areadetector.plugins import PvaPlugin_V34
+import datetime
 import numpy as np
 import pathlib
 
 
 
-AD_IOC_MOUNT_PATH = pathlib.Path(iconfig["AD_IMAGE_PATH"])
-BLUESKY_MOUNT_PATH = pathlib.Path(iconfig["BLUESKY_IMAGE_PATH"])
-IMAGE_DIR = "adsimdet/%Y/%m/%d"
+AD_IOC_MOUNT_PATH = pathlib.Path(iconfig["ADIOC_IMAGE_ROOT"])
+BLUESKY_MOUNT_PATH = pathlib.Path(iconfig["BLUESKY_IMAGE_ROOT"])
+IMAGE_SUBDIR = iconfig["AD_IMAGE_SUBDIR"]
 
 # MUST end with a `/` (which pathlib will not provide)
-WRITE_PATH_TEMPLATE = f"{AD_IOC_MOUNT_PATH / IMAGE_DIR}/"
-READ_PATH_TEMPLATE = f"{BLUESKY_MOUNT_PATH / IMAGE_DIR}/"
+WRITE_PATH_TEMPLATE = f"{AD_IOC_MOUNT_PATH / IMAGE_SUBDIR}/"
+READ_PATH_TEMPLATE = f"{BLUESKY_MOUNT_PATH / IMAGE_SUBDIR}/"
+# print(f"{WRITE_PATH_TEMPLATE = }")
+# print(f"{READ_PATH_TEMPLATE = }")
 
 
 class MyFixedCam(SimDetectorCam):
     pool_max_buffers = None
     offset = ADComponent(EpicsSignalWithRBV, "Offset")
+    wait_for_plugins = ADComponent(
+        EpicsSignal, "WaitForPlugins", kind="omitted", string=True
+    )
 
 
 class MyHDF5Plugin(FileStoreHDF5IterativeWrite, HDF5Plugin_V34):
@@ -55,6 +62,32 @@ class MyHDF5Plugin(FileStoreHDF5IterativeWrite, HDF5Plugin_V34):
     * ``unstage()`` - restore device PVs after data acquisition
     * ``generate_datum()`` - coordinate image storage metadata
     """
+
+    def make_filename(self):
+        '''Make a filename.
+
+        This is a hook so that the read and write paths can either be modified
+        or created on disk prior to configuring the areaDetector plugin.
+
+        Returns
+        -------
+        filename : str
+            The start of the filename
+        read_path : str
+            Path that ophyd can read from
+        write_path : str
+            Path that the IOC can write to
+        '''
+        filename = new_short_uid()
+        formatter = datetime.datetime.now().strftime
+        print(f"{filename = }")
+        print(f"{self.write_path_template = }")
+        print(f"{self.read_path_template = }")
+        write_path = pathlib.Path(formatter(self.write_path_template))
+        read_path = pathlib.Path(formatter(self.read_path_template))
+        # print(f"{write_path = }")
+        # print(f"{read_path = }")
+        return filename, f"{read_path}/", f"{write_path}/"
 
 
 class MySimDetector(SingleTrigger, DetectorBase):
@@ -146,6 +179,7 @@ adsimdet.cam.stage_sigs["image_mode"] = "Single"
 adsimdet.cam.stage_sigs["num_images"] = 1
 adsimdet.cam.stage_sigs["acquire_time"] = 0.1
 adsimdet.cam.stage_sigs["acquire_period"] = 0.105
+adsimdet.cam.stage_sigs["wait_for_plugins"] = "Yes"
 adsimdet.hdf1.stage_sigs["lazy_open"] = 1
 adsimdet.hdf1.stage_sigs["compression"] = "None"
 adsimdet.hdf1.stage_sigs["file_template"] = "%s%s_%3.3d.h5"
