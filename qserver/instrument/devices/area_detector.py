@@ -21,6 +21,7 @@ from .calculation_records import incident_beam_calc
 from .calculation_records import ad_x_calc, ad_y_calc
 from ophyd import ADComponent
 from ophyd import DetectorBase
+from ophyd import EpicsSignal
 from ophyd import EpicsSignalWithRBV
 from ophyd import SimDetectorCam
 from ophyd import SingleTrigger
@@ -45,6 +46,9 @@ READ_PATH_TEMPLATE = f"{BLUESKY_MOUNT_PATH / IMAGE_DIR}/"
 class MyFixedCam(SimDetectorCam):
     pool_max_buffers = None
     offset = ADComponent(EpicsSignalWithRBV, "Offset")
+    wait_for_plugins = ADComponent(
+        EpicsSignal, "WaitForPlugins", kind="omitted", string=True
+    )
 
 
 class MyHDF5Plugin(FileStoreHDF5IterativeWrite, HDF5Plugin_V34):
@@ -55,6 +59,38 @@ class MyHDF5Plugin(FileStoreHDF5IterativeWrite, HDF5Plugin_V34):
     * ``unstage()`` - restore device PVs after data acquisition
     * ``generate_datum()`` - coordinate image storage metadata
     """
+
+    # fixes one problem, MUST end with path delimiter
+    @property
+    def write_path_template(self):
+        rootp = self.reg_root
+        delimiter = "/"
+        if self.path_semantics == 'posix':
+            ret = pathlib.PurePosixPath(self._write_path_template)
+        elif self.path_semantics == 'windows':
+            ret = pathlib.PureWindowsPath(self._write_path_template)
+            delimiter = "\\"
+        elif self.path_semantics is None:
+            # We are forced to guess which path semantics to use.
+            # Guess that the AD driver is running on the same OS as this client.
+            ret = pathlib.PurePath(self._write_path_template)
+        else:
+            # This should never happen, but just for the sake of future-proofing...
+            raise ValueError(f"Cannot handle path_semantics={self.path_semantics}")
+
+        if self._read_path_template is None and rootp not in ret.parents:
+            if not ret.is_absolute():
+                ret = rootp / ret
+            else:
+                raise ValueError(
+                    ('root: {!r} in not consistent with '
+                     'read_path_template: {!r}').format(rootp, ret))
+
+        return f"{ret}{delimiter}"  # THIS is the fix, MUST end with delimiter
+
+    @write_path_template.setter
+    def write_path_template(self, val):
+        self._write_path_template = val
 
 
 class MySimDetector(SingleTrigger, DetectorBase):
@@ -146,8 +182,7 @@ adsimdet.cam.stage_sigs["image_mode"] = "Single"
 adsimdet.cam.stage_sigs["num_images"] = 1
 adsimdet.cam.stage_sigs["acquire_time"] = 0.1
 adsimdet.cam.stage_sigs["acquire_period"] = 0.105
-adsimdet.hdf1.stage_sigs["lazy_open"] = 1
-adsimdet.hdf1.stage_sigs["compression"] = "None"
+adsimdet.cam.stage_sigs["wait_for_plugins"] = "Yes"
 adsimdet.hdf1.stage_sigs["file_template"] = "%s%s_%3.3d.h5"
 
 if iconfig.get("ENABLE_AREA_DETECTOR_IMAGE_PLUGIN", False):
