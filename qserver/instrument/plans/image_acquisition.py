@@ -105,16 +105,14 @@ def take_image(atime, aperiod=None, nframes=1, compression=None, md=None):
     adsimdet.cam.stage_sigs["acquire_time"] = atime
     adsimdet.cam.stage_sigs["acquire_period"] = aperiod
     adsimdet.cam.stage_sigs["num_images"] = nframes
-    if nframes > 1:
-        adsimdet.cam.stage_sigs["image_mode"] = "Multiple"
-    else:
-        adsimdet.cam.stage_sigs["image_mode"] = "Single"
-    adsimdet.hdf1.stage_sigs.pop("capture")
-    adsimdet.hdf1.stage_sigs["create_directory"] = -5
-    adsimdet.hdf1.stage_sigs["file_write_mode"] = "Stream"
-    adsimdet.hdf1.stage_sigs["num_capture"] = nframes
-    adsimdet.hdf1.stage_sigs["compression"] = compression
-    adsimdet.hdf1.stage_sigs["capture"] = 1  # to the end of the list
+
+    yield from bps.mv(
+        adsimdet.cam.image_mode, "Multiple" if nframes > 1 else "Single",
+        adsimdet.hdf1.create_directory, -5,
+        adsimdet.hdf1.file_write_mode, "Stream",
+        adsimdet.hdf1.num_capture, nframes,
+        adsimdet.hdf1.compression, compression,
+    )
 
     print(f"{adsimdet.cam.stage_sigs = }")
     print(f"{adsimdet.hdf1.stage_sigs = }")
@@ -151,9 +149,9 @@ def take_image(atime, aperiod=None, nframes=1, compression=None, md=None):
         print(f"DIAGNOSTIC: {run = }")
         r = run.primary._get_resources()[0]
         print(f"DIAGNOSTIC: {r = }")
-        rp = r["resource_path"]
-        # rp = r["resource_path"].replace("_-001", "_000")  # TODO: but why?
-        hdffile = pathlib.Path(r["root"]) / rp
+        path = pathlib.Path(r["root"]) / r["resource_path"]
+        fname = pathlib.Path(adsimdet.hdf1.full_file_name.get())
+        hdffile = path.parent / fname.name
         print(f"DIAGNOSTIC: {hdffile = },  {hdffile.exists()=}")
         logger.info("Image file '%s' (exists: %s)", hdffile, hdffile.exists())
         yield from bps.mv(image_file_created, str(hdffile))

@@ -63,31 +63,35 @@ class MyHDF5Plugin(FileStoreHDF5IterativeWrite, HDF5Plugin_V34):
     * ``generate_datum()`` - coordinate image storage metadata
     """
 
-    def make_filename(self):
-        '''Make a filename.
 
-        This is a hook so that the read and write paths can either be modified
-        or created on disk prior to configuring the areaDetector plugin.
+    @property
+    def write_path_template(self):
+        rootp = self.reg_root
+        if self.path_semantics == 'posix':
+            ret = pathlib.PurePosixPath(self._write_path_template)
+        elif self.path_semantics == 'windows':
+            ret = pathlib.PureWindowsPath(self._write_path_template)
+        elif self.path_semantics is None:
+            # We are forced to guess which path semantics to use.
+            # Guess that the AD driver is running on the same OS as this client.
+            ret = pathlib.PurePath(self._write_path_template)
+        else:
+            # This should never happen, but just for the sake of future-proofing...
+            raise ValueError(f"Cannot handle path_semantics={self.path_semantics}")
 
-        Returns
-        -------
-        filename : str
-            The start of the filename
-        read_path : str
-            Path that ophyd can read from
-        write_path : str
-            Path that the IOC can write to
-        '''
-        filename = new_short_uid()
-        formatter = datetime.datetime.now().strftime
-        print(f"{filename = }")
-        print(f"{self.write_path_template = }")
-        print(f"{self.read_path_template = }")
-        write_path = pathlib.Path(formatter(self.write_path_template))
-        read_path = pathlib.Path(formatter(self.read_path_template))
-        # print(f"{write_path = }")
-        # print(f"{read_path = }")
-        return filename, f"{read_path}/", f"{write_path}/"
+        if self._read_path_template is None and rootp not in ret.parents:
+            if not ret.is_absolute():
+                ret = rootp / ret
+            else:
+                raise ValueError(
+                    ('root: {!r} in not consistent with '
+                     'read_path_template: {!r}').format(rootp, ret))
+
+        return f"{ret}/"
+
+    @write_path_template.setter
+    def write_path_template(self, val):
+        self._write_path_template = val
 
 
 class MySimDetector(SingleTrigger, DetectorBase):
@@ -180,8 +184,8 @@ adsimdet.cam.stage_sigs["num_images"] = 1
 adsimdet.cam.stage_sigs["acquire_time"] = 0.1
 adsimdet.cam.stage_sigs["acquire_period"] = 0.105
 adsimdet.cam.stage_sigs["wait_for_plugins"] = "Yes"
-adsimdet.hdf1.stage_sigs["lazy_open"] = 1
-adsimdet.hdf1.stage_sigs["compression"] = "None"
+# adsimdet.hdf1.stage_sigs["lazy_open"] = 1
+# adsimdet.hdf1.stage_sigs["compression"] = "None"
 adsimdet.hdf1.stage_sigs["file_template"] = "%s%s_%3.3d.h5"
 
 if iconfig.get("ENABLE_AREA_DETECTOR_IMAGE_PLUGIN", False):
