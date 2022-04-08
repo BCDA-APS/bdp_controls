@@ -22,6 +22,7 @@ from ..devices import samplexy
 from ..devices import shutter
 from ..qserver_framework import RE
 from bluesky import plan_stubs as bps
+import databroker
 import datetime
 import pathlib
 import pyRestTable
@@ -41,18 +42,27 @@ def information():
     """Print the full information table."""
     yield from bps.null()  # MUST yield something
 
-    table = pyRestTable.Table()
+    cat = databroker.catalog[iconfig["DATABROKER_CATALOG"]]
 
     info = {}
+
+    # RunEngine metadata
     keys = list(RE.md.keys())
-    keys.pop(keys.index("versions"))
-    keys.pop(keys.index("pid"))
-    keys.pop(keys.index("proposal_id"))
+    for k in "versions pid proposal_id instrument_name".split():
+        keys.pop(keys.index(k))
+    keys.insert(0, "instrument_name")
+    if "scan_id" not in keys:
+        keys.append("scan_id")
     for k in keys:
         info[k] = RE.md.get(k, "")
-    info["catalog"] = iconfig["DATABROKER_CATALOG"]
+
+    # info["databroker_catalog_mongodb_host"] = cat._metadatastore_db.client.HOST
+    # info["databroker_catalog_mongodb_name"] = cat._metadatastore_db.name
+
     info["beam"] = incident_beam.get()
     info["shutter"] = shutter.state
+
+    # positioner information (detailed)
     info.update(_positions())
     for o in (samplexy.coarse.x, samplexy.coarse.y):
         info[f"{o.name}_pv"] = o.prefix
@@ -66,10 +76,14 @@ def information():
         info[f"{o.name}_units"] = o.metadata["units"]
         info[f"{o.name}_limit_high"] = o.limits[1]
         info[f"{o.name}_limit_low"] = o.limits[0]
+
+    # image information
     p = pathlib.Path(image_file_created.get())
     info["last_image_file_created"] = f"{p}"
     info["last_image_file_created_exists"] = p.exists()
 
+    # build the table from the dictionary
+    table = pyRestTable.Table()
     table.labels = "key value".split()
     for k, v in info.items():
         table.addRow((k, v))
@@ -88,10 +102,10 @@ def print_positioners():
     """Print the positioners' table."""
     yield from bps.null()  # MUST yield something
 
-    table = pyRestTable.Table()
-
     info = _positions()
 
+    # build the table from the dictionary
+    table = pyRestTable.Table()
     table.labels = "key value".split()
     for k, v in info.items():
         table.addRow((k, v))
