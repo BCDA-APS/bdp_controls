@@ -2,7 +2,11 @@
 Define RE for bluesky-queueserver
 """
 
-__all__ = ["RE", "sd"]
+__all__ = """
+    cat
+    RE
+    sd
+""".split()
 
 import logging
 logger = logging.getLogger(__name__)
