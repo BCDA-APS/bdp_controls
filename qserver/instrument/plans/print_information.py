@@ -20,6 +20,7 @@ from ..devices import image_file_created
 from ..devices import incident_beam
 from ..devices import samplexy
 from ..devices import shutter
+from ..qserver_framework import RE
 from bluesky import plan_stubs as bps
 import datetime
 import pathlib
@@ -43,7 +44,12 @@ def information():
     table = pyRestTable.Table()
 
     info = {}
-    info["instrument_name"] = iconfig["RUNENGINE_METADATA"]["instrument_name"]
+    keys = list(RE.md.keys())
+    keys.pop(keys.index("versions"))
+    keys.pop(keys.index("pid"))
+    keys.pop(keys.index("proposal_id"))
+    for k in keys:
+        info[k] = RE.md.get(k, "")
     info["catalog"] = iconfig["DATABROKER_CATALOG"]
     info["beam"] = incident_beam.get()
     info["shutter"] = shutter.state
