@@ -34,13 +34,13 @@ import pathlib
 
 
 
-AD_IOC_MOUNT_PATH = pathlib.Path(iconfig["AD_IMAGE_PATH"])
-BLUESKY_MOUNT_PATH = pathlib.Path(iconfig["BLUESKY_IMAGE_PATH"])
-IMAGE_DIR = "adsimdet/%Y/%m/%d"
+AD_IOC_MOUNT_PATH = pathlib.Path(iconfig["ADIOC_IMAGE_ROOT"])
+BLUESKY_MOUNT_PATH = pathlib.Path(iconfig["BLUESKY_IMAGE_ROOT"])
+IMAGE_SUBDIR = iconfig["AD_IMAGE_SUBDIR"]
 
 # MUST end with a `/` (which pathlib will not provide)
-WRITE_PATH_TEMPLATE = f"{AD_IOC_MOUNT_PATH / IMAGE_DIR}/"
-READ_PATH_TEMPLATE = f"{BLUESKY_MOUNT_PATH / IMAGE_DIR}/"
+WRITE_PATH_TEMPLATE = f"{AD_IOC_MOUNT_PATH / IMAGE_SUBDIR}/"
+READ_PATH_TEMPLATE = f"{BLUESKY_MOUNT_PATH / IMAGE_SUBDIR}/"
 
 
 class MyFixedCam(SimDetectorCam):
