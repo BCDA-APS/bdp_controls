@@ -173,23 +173,25 @@ def _xml_attributes():
             ' />'
         )
 
-    specifications = [
-        # attr      PV      description     dbrtype
-        ["aps_current", "S:SRcurrentAI", "DBR_NATIVE"],
-        ["aps_fill_number", "S:FillNumber", "DBR_NATIVE"],
-        ["aps_orbit_correction", "S:OrbitCorrection:CC", "DBR_NATIVE"],
-        ["aps_global_feedback", "SRFB:GBL:LoopStatusBI", "DBR_STRING"],
-        # ["aps_global_feedback_h", "SRFB:GBL:HLoopStatusBI", "DBR_STRING"],
-        # ["aps_global_feedback_v", "SRFB:GBL:VLoopStatusBI", "DBR_STRING"],
-        # ["aps_operator_messages_operators", "OPS:message1", "DBR_STRING"],
-        # ["aps_operator_messages_floor_coordinator", "OPS:message2", "DBR_STRING"],
-        ["aps_operator_messages_fill_pattern", "OPS:message3", "DBR_STRING"],
-        # ["aps_operator_messages_last_problem_message", "OPS:message4", "DBR_STRING"],
-        # ["aps_operator_messages_last_trip_message", "OPS:message5", "DBR_STRING"],
-        ["aps_operator_messages_message6", "OPS:message6", "DBR_STRING"],
-        # ["aps_operator_messages_message7", "OPS:message7", "DBR_STRING"],
-        # ["aps_operator_messages_message8", "OPS:message8", "DBR_STRING"],
-    ]
+    specifications = []
+    if iconfig["APS_IN_BASELINE"]:
+        specifications += [
+            # attr      PV      description     dbrtype
+            ["aps_current", "S:SRcurrentAI", "DBR_NATIVE"],
+            ["aps_fill_number", "S:FillNumber", "DBR_NATIVE"],
+            ["aps_orbit_correction", "S:OrbitCorrection:CC", "DBR_NATIVE"],
+            ["aps_global_feedback", "SRFB:GBL:LoopStatusBI", "DBR_STRING"],
+            # ["aps_global_feedback_h", "SRFB:GBL:HLoopStatusBI", "DBR_STRING"],
+            # ["aps_global_feedback_v", "SRFB:GBL:VLoopStatusBI", "DBR_STRING"],
+            # ["aps_operator_messages_operators", "OPS:message1", "DBR_STRING"],
+            # ["aps_operator_messages_floor_coordinator", "OPS:message2", "DBR_STRING"],
+            ["aps_operator_messages_fill_pattern", "OPS:message3", "DBR_STRING"],
+            # ["aps_operator_messages_last_problem_message", "OPS:message4", "DBR_STRING"],
+            # ["aps_operator_messages_last_trip_message", "OPS:message5", "DBR_STRING"],
+            ["aps_operator_messages_message6", "OPS:message6", "DBR_STRING"],
+            # ["aps_operator_messages_message7", "OPS:message7", "DBR_STRING"],
+            # ["aps_operator_messages_message8", "OPS:message8", "DBR_STRING"],
+        ]
     for axis in "x y".split():
         m = getattr(samplexy.coarse, axis)
         specifications.append([f"{m.name}", f"{getattr(m, 'user_readback').pvname}", "DBR_NATIVE"])
