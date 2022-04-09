@@ -17,6 +17,7 @@ logger.info(__file__)
 print(__file__)
 
 from .. import iconfig
+from .samplexy_stage import samplexy
 from .calculation_records import incident_beam_calc
 from .calculation_records import ad_x_calc, ad_y_calc
 from ophyd import ADComponent
@@ -170,6 +171,97 @@ def dither_ad_peak_position(magnitude=40):
     dither_ad_on()
 
 
+def _xml_attributes():
+    """
+    Define the content of the attributes XML file.
+
+    Primarily, this is the list of PVs to bundle with
+    every image frame.
+    """
+    xml = [
+        '<?xml version="1.0" standalone="no" ?>',
+        '<Attributes',
+        '    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+        '    xsi:schemaLocation="http://epics.aps.anl.gov/areaDetector/attributes ../attributes.xsd"',
+        '    >',
+    ]
+
+    specifications = [
+        # attr   source   datatype    description
+        ["Manufacturer", "MANUFACTURER", "STRING", "Camera manufacturer"],
+        ["Model", "MODEL", "STRING", "Camera model"],
+        ["MaxSizeX", "MAX_SIZE_X", "INT", "Detector X size"],
+        ["MaxSizeY", "MAX_SIZE_Y", "INT", "Detector Y size"],
+        ["ImageCounter", "ARRAY_COUNTER", "INT", "Image counter"],
+        ["DriverFileName", "FULL_FILE_NAME", "STRING", "Driver full file name"],
+        ["FileName", "FILE_NAME", "STRING", "Driver file name"],
+        ["AttributesFile", "ND_ATTRIBUTES_FILE", "STRING", "Attributes file name"],
+        ["ADCoreVersion", "ADCORE_VERSION", "STRING", "ADCore version number"],
+    ]
+    for attr, source, datatype, description in specifications:
+        xml.append(
+            '  <Attribute'
+            ' type="PARAM"'
+            f' source="{source}"'
+            f' name="{attr}"'
+            f' description="{description}"'
+            f' datatype="{datatype}"'
+            ' />'
+        )
+
+    specifications = []
+    if iconfig["APS_IN_BASELINE"]:
+        specifications += [
+            # attr      PV      description     dbrtype
+            ["aps_current", "S:SRcurrentAI", "DBR_NATIVE"],
+            ["aps_fill_number", "S:FillNumber", "DBR_NATIVE"],
+            ["aps_orbit_correction", "S:OrbitCorrection:CC", "DBR_NATIVE"],
+            ["aps_global_feedback", "SRFB:GBL:LoopStatusBI", "DBR_STRING"],
+            # ["aps_global_feedback_h", "SRFB:GBL:HLoopStatusBI", "DBR_STRING"],
+            # ["aps_global_feedback_v", "SRFB:GBL:VLoopStatusBI", "DBR_STRING"],
+            # ["aps_operator_messages_operators", "OPS:message1", "DBR_STRING"],
+            # ["aps_operator_messages_floor_coordinator", "OPS:message2", "DBR_STRING"],
+            ["aps_operator_messages_fill_pattern", "OPS:message3", "DBR_STRING"],
+            # ["aps_operator_messages_last_problem_message", "OPS:message4", "DBR_STRING"],
+            # ["aps_operator_messages_last_trip_message", "OPS:message5", "DBR_STRING"],
+            ["aps_operator_messages_message6", "OPS:message6", "DBR_STRING"],
+            # ["aps_operator_messages_message7", "OPS:message7", "DBR_STRING"],
+            # ["aps_operator_messages_message8", "OPS:message8", "DBR_STRING"],
+        ]
+    for axis in "x y".split():
+        m = getattr(samplexy.coarse, axis)
+        specifications.append([f"{m.name}", f"{getattr(m, 'user_readback').pvname}", "DBR_NATIVE"])
+        specifications.append([f"{m.name}_setpoint", f"{getattr(m, 'user_setpoint').pvname}", "DBR_NATIVE"])
+        m = getattr(samplexy.fine, axis)
+        specifications.append([f"{m.name}", f"{m.pvname}", "DBR_NATIVE"])
+    for attr, pv, dbrtype in specifications:
+        xml.append(
+            '  <Attribute'
+            ' type="EPICS_PV"'
+            f' source="{pv}"'
+            f' name="{attr}"'
+            f' description="{attr}"'
+            f' dbrtype="{dbrtype}"'  #  dbrtype="DBR_NATIVE"
+            ' />'
+        )
+
+    xml.append('</Attributes>')
+    return '\n'.join(xml)
+
+
+def setup_attributes_file():
+    path = BLUESKY_MOUNT_PATH
+    if path.exists():
+        # afile = IMAGE_DIR / "attributes.xml"
+        afile = "attributes.xml"
+        with open(f"{path / afile}", "w") as f:
+            f.write(_xml_attributes())
+        if (path / afile).exists():
+            adsimdet.cam.nd_attributes_file.put(
+                f"{AD_IOC_MOUNT_PATH / afile}"
+            )
+
+
 adsimdet = MySimDetector(iconfig["ADSIM_IOC_PREFIX"], name="adsimdet")
 adsimdet.wait_for_connection(timeout=iconfig["PV_CONNECTION_TIMEOUT"])
 
@@ -203,3 +295,5 @@ if WARMUP_OK and (np.array(adsimdet.hdf1.array_size.get()).sum() == 0):
 change_ad_simulated_image_parameters()
 # have EPICS dither the peak position
 dither_ad_peak_position()
+
+setup_attributes_file()

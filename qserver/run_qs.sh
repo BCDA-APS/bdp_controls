@@ -2,11 +2,6 @@
 
 # manage the bluesky queueserver
 
-__ALL__ = """
-    RE
-    cat
-""".split()
-
 #--------------------
 # change the program defaults here
 CONDA_ENVIRONMENT=bdp2022

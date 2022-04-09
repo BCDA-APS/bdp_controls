@@ -2,7 +2,11 @@
 Define RE for bluesky-queueserver
 """
 
-__all__ = ["RE", "sd"]
+__all__ = """
+    cat
+    RE
+    sd
+""".split()
 
 import logging
 logger = logging.getLogger(__name__)
@@ -15,11 +19,9 @@ import apstools
 import bluesky
 import bluesky_queueserver
 import databroker
-import datetime
 import epics
 import getpass
 import h5py
-import intake
 import matplotlib
 import numpy
 import ophyd
