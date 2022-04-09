@@ -162,13 +162,17 @@ def monitor(pv):
     centroid = [stats[k]['centroid_position'] for k in 'horizontal vertical'.split()]
     fwhm = [stats[k]['fwhm'] for k in 'horizontal vertical'.split()]
 
+    goal = np.array(shape)/2
+    advise = goal - np.array(centroid) + np.array(fine)
+    cost = ((goal - np.array(centroid)) / np.array(fwhm))**2
+
     # print(f"{shape = }")
     # print(f"{image.shape = }")
     # print(f"{pv.keys() = }")
     # print(f"image timestamp = {datetime.datetime.fromtimestamp(timestamp)}")
     # print(pv["attribute"])
     # print(f"id={pv['uniqueId']}  {fine=}  {centroid=}  {fwhm=}")
-    print(pv['uniqueId'], *fine, *centroid, *fwhm)
+    print(pv['uniqueId'], *fine, *centroid, *fwhm, cost.sum(), *advise)
     # gpv = pv
 
     # table = pyRestTable.Table()
