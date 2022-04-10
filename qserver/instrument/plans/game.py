@@ -2,7 +2,7 @@
 Make a simulation for remote feedback to adjust.
 """
 
-__all__ = ["game_configure", ]
+__all__ = ["game_setup", ]
 
 import logging
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ from bluesky import plan_stubs as bps
 import random
 
 
-def game_configure(coarse_gain=10, fine_gain=0.1, noise=2.5):
+def game_setup(coarse_gain=10, fine_gain=0.1, noise=2.5):
     """Configure for the game."""
     yield from bps.null()  # MUST yield something
     for calc in (ad_x_calc, ad_y_calc):
