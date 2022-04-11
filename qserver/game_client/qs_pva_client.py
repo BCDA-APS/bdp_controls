@@ -6,6 +6,8 @@ Find centroid and width of central peak in image PV.
 """
 
 from .analysis import analyze_image
+from .examples import plan_dict
+from .examples import print_plan_commands
 import datetime
 import numpy as np
 import pvaccess
@@ -13,6 +15,7 @@ import pyRestTable
 import time
 
 IMAGE_PV = "bdpad:Pva1:Image"
+COST_GOAL = 0.01
 results = []
 
 
@@ -34,77 +37,106 @@ def print_pv_as_table(pv, clip=60):
     print(table)
 
 
-def monitor(pv):
+def pva_to_image(pv):
+    try:
+        shape = [
+            axis["size"]
+            for axis in pv["dimension"]
+        ]
+        image = pv["value"][0]["ubyteValue"].reshape(*shape)
+    except KeyError:
+        image = None
+    return image
 
-    shape = [
-        axis["size"]
-        for axis in pv["dimension"]
-    ]
-    image = pv["value"][0]["ubyteValue"].reshape(*shape)
 
-    timestamp = pv["dataTimeStamp"]["secondsPastEpoch"]
-    timestamp += pv["dataTimeStamp"]["nanoseconds"] * 1e-9
-    ts = datetime.datetime.fromtimestamp(timestamp)
-
+def get_pva_ndattributes(pv):
     attributes = {
         attr["name"]: [v for v in attr.get("value", "")]
         for attr in pv["attribute"]
     }
-    fine = [
-        attributes[f"samplexy_fine_{k}"][0].get("value", "")
-        for k in 'x y'.split()
-    ]
+    for k in  "codec uniqueId uncompressedSize".split():
+        if k in pv:
+            attributes[k] = pv[k]
+    return attributes
+
+
+def get_pva_timestamp(pv):
+    timestamp = pv["dataTimeStamp"]["secondsPastEpoch"]
+    timestamp += pv["dataTimeStamp"]["nanoseconds"] * 1e-9
+    ts = datetime.datetime.fromtimestamp(timestamp)
+    return ts
+
+
+def monitor(pv):
+    image = pva_to_image(pv)
+    if image is None:
+        return
+    metadata = get_pva_ndattributes(pv)
+    ts = get_pva_timestamp(pv)
 
     stats = analyze_image(image)
     centroid = [stats[k]['centroid_position'] for k in 'horizontal vertical'.split()]
     fwhm = [stats[k]['fwhm'] for k in 'horizontal vertical'.split()]
 
-    goal = np.array(shape)/2
-    advise = goal - np.array(centroid) + np.array(fine)
-    cost = ((goal - np.array(centroid)) / np.array(fwhm))**2
+    fine = [
+        metadata[f"samplexy_fine_{k}"][0].get("value", "")
+        for k in 'x y'.split()
+    ]
+    target = np.array(image.shape)/2
+    next_fine = target - np.array(centroid) + np.array(fine)
+    cost = ((target - np.array(centroid)) / np.array(fwhm))**2
     results.append(
         dict(
             image_time=str(ts),
-            image_timestamp=timestamp,
+            image_timestamp=ts.timestamp(),
             uniqueId=pv['uniqueId'],
             stats=stats,
             cost=cost,
             cost_sum=cost.sum(),
             finexy=fine,
-            next_finexy=advise,
+            next_finexy=next_fine,
         )
     )
 
-    # print(f"{shape = }")
-    # print(f"{image.shape = }")
-    # print(f"{pv.keys() = }")
-    # print(f"image timestamp = {datetime.datetime.fromtimestamp(timestamp)}")
-    # print(pv["attribute"])
-    # print(f"id={pv['uniqueId']}  {fine=}  {centroid=}  {fwhm=}")
+    total_cost = np.sqrt(cost.sum())
     print(
-        datetime.datetime.fromtimestamp(timestamp),
-        pv['uniqueId'],
-        " ",
-        round(fine[0], 3),
-        round(fine[1], 3),
-        " ",
-        round(centroid[0], 3),
-        round(centroid[1], 3),
-        " ",
-        round(fwhm[0], 3),
-        round(fwhm[1], 3),
-        " ",
-        cost.sum(),
-        " ",
-        round(advise[0], 3),
-        round(advise[1], 3),
+        f"# {ts}"
+        f" {metadata['uniqueId']}"
+        f"  fine=({fine[0]:.2f}, {fine[1]:.2f})"
+        f"  cost={total_cost}"
     )
+    if total_cost < COST_GOAL:
+        print("# !!! goal has been reached !!!")
+    else:
+        print_plan_commands(
+            [
+                plan_dict("move_fine_positioner", next_fine[0], next_fine[1]),
+                plan_dict("take_image", 0.01),
+            ]
+        )
+        print("qserver queue start")
 
 
 def runner():
     c = pvaccess.Channel(IMAGE_PV)
     c.subscribe("monitor", monitor)
     c.startMonitor()
+
+    time.sleep(1)
+    print("#"*40, "to restart simple simulation...")
+    print("qserver history clear")
+    print("qserver queue clear")
+    print_plan_commands(
+        [
+            plan_dict("prime_hdf_plugin"),
+            plan_dict("move_fine_positioner", 0, 0),
+            plan_dict("new_sample", 0, 1, 0),
+            plan_dict("open_shutter"),
+            plan_dict("take_image", 0.01),
+        ]
+    )
+    print("qserver queue start")
+
     while True:
         time.sleep(1)
 
