@@ -29,7 +29,7 @@ Center the image by adjusting the samplexy fine positioners.
 
 ![Simulated Instrument](../simulated-instrument.png)
 
-part | description
+component | description
 --- | ---
 `beam` | nominal value of 200 with small random noise
 `shutter` | *closed* or *open* (affects `adsimdet` image), **note**: *closed* by default
