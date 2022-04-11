@@ -48,6 +48,7 @@ JSON_PLANS = '''
     "user_group": "admin"}]
 '''
 
+
 def main():
     q = json.loads(JSON_PLANS)
     for plan in q:
@@ -87,7 +88,7 @@ def example():
     plans = [
         plan_dict("prime_hdf_plugin"),
         plan_dict("move_fine_positioner", 0, 0),
-        plan_dict("game_setup", 0, 1, 0),
+        plan_dict("new_sample", 0, 1, 0),
         plan_dict("open_shutter"),
         plan_dict("take_image", 0.01, 0.2),
         plan_dict("sleep", 5),
@@ -96,6 +97,10 @@ def example():
         plan_dict("move_fine_positioner", -371.016, -215.053),
         plan_dict("take_image", atime=0.01, aperiod=0.2),
     ]
+    print_plan_commands(plans)
+
+
+def print_plan_commands(plans):
     for plan in plans:
         txt = json.dumps(plan)
         print(f"qserver queue add plan '{txt}'")
