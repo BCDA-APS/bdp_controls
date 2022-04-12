@@ -63,7 +63,7 @@ def update_cross_reference_file(run_uid, image_name):
         )
 
 
-def take_image(atime, aperiod=None, md=None):
+def take_image(atime, aperiod=None, nframes=1, compression="None", md=None):
     """
     Take one image with the area detector.
 
@@ -78,6 +78,12 @@ def take_image(atime, aperiod=None, md=None):
         Should be ``AcquireTime < AcquirePeriod`` in most cases.
         When ``aperiod`` is ``None``, then it will be set slightly
         longer than ``atime``.
+    nframes int:
+        Number of image frames per acquisition.
+        default: 1
+    compression str:
+        Name of compression algorithm for HDF5 files.
+        default: "None"
     md dict:
         Dictionary of any additional metadata to add to this image.
 
@@ -94,11 +100,25 @@ def take_image(atime, aperiod=None, md=None):
     if aperiod is None or aperiod <= atime:
         aperiod = atime + APERIOD_EXTRA
 
+    if compression not in adsimdet.hdf1.compression.enum_strs:
+        raise ValueError(
+            f"Compression value '{compression}' not recognized."
+            "  Must be one of these: "
+            f"{', '.join(adsimdet.hdf1.compression.enum_strs)}"
+        )
+
+    nframes = max(1, nframes)
+
     adsimdet.cam.stage_sigs["acquire_time"] = atime
     adsimdet.cam.stage_sigs["acquire_period"] = aperiod
+    adsimdet.cam.stage_sigs["image_mode"] = "Multiple" if nframes > 1 else "Single"
+    adsimdet.cam.stage_sigs["num_images"] = nframes
+    adsimdet.hdf1.stage_sigs["num_capture"] = nframes
 
     logger.info("area detector (%s) acquire time: %f", adsimdet.name, atime)
     logger.info("area detector (%s) acquire period: %f", adsimdet.name, aperiod)
+    logger.info("area detector (%s) frames/image: %d", adsimdet.name, nframes)
+    logger.info("area detector (%s) HDF5 compression: %s", adsimdet.name, compression)
 
     _md = dict(
         plan_name = "take_image",
@@ -112,20 +132,48 @@ def take_image(atime, aperiod=None, md=None):
         fine_y = samplexy.fine.y.get(),
         acquire_time = atime,
         acquire_period = aperiod,
+        frames_per_image = nframes,
+        HDF5_compression = compression,
         shutter = shutter.state,
     )
     _md.update(md or {})
 
+    yield from bps.mv(
+        # FIXME: provokes a write timeout on file_template
+        # adsimdet.hdf1.lazy_open, 1,
+
+        adsimdet.hdf1.create_directory, -5,
+        adsimdet.hdf1.file_write_mode, "Stream",
+        adsimdet.hdf1.compression, compression,
+    )
+
+    # FIXME: first get() returns only the "%"  -- Why?
+    """
+    TimeoutError: Attempted to set EpicsSignalWithRBV(read_pv='bdpad:HDF1:FileTemplate_RBV', name='adsimdet_hdf1_file_template', parent='adsimdet_hdf1', value='%', timestamp=1649372489.9390404, auto_monitor=True, string=True, write_pv='bdpad:HDF1:FileTemplate', limits=False, put_complete=False) to value '%s%s_%3.3d.h5' and timed out after 10 seconds. Current value is '%'.
+
+    In [4]: adsimdet.hdf1.file_template.get()
+    Out[4]: '%'
+
+    In [5]: adsimdet.hdf1.file_template.get?
+
+    In [6]: adsimdet.hdf1.file_template.get(use_monitor=False)
+    Out[6]: '%s%s_%3.3d.h5'
+    """
+    # Force ophyd to request a new value from the IOC
+    adsimdet.hdf1.file_template.get(use_monitor=False)
+
     uid = yield from bp.count([adsimdet], md=_md)
-    print(f"DIAGNOSTIC: {uid = }")
+    # print(f"DIAGNOSTIC: {uid = }")
 
     try:
         # write the image file name to a PV
         run = cat[uid]
-        print(f"DIAGNOSTIC: {run = }")
+        # print(f"DIAGNOSTIC: {run = }")
         r = run.primary._get_resources()[0]
-        print(f"DIAGNOSTIC: {r = }")
-        hdffile = pathlib.Path(r["root"]) / r["resource_path"]
+        # print(f"DIAGNOSTIC: {r = }")
+        path = pathlib.Path(r["root"]) / r["resource_path"]
+        fname = pathlib.Path(adsimdet.hdf1.full_file_name.get())
+        hdffile = path.parent / fname.name
         print(f"DIAGNOSTIC: {hdffile = },  {hdffile.exists()=}")
         logger.info("Image file '%s' (exists: %s)", hdffile, hdffile.exists())
         yield from bps.mv(image_file_created, str(hdffile))
