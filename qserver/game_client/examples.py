@@ -2,6 +2,7 @@
 """
 
 import json
+import yaml
 
 JSON_PLANS = '''
 [{"args": [],
@@ -97,13 +98,20 @@ def example():
         plan_dict("move_fine_positioner", -371.016, -215.053),
         plan_dict("take_image", atime=0.01, aperiod=0.2),
     ]
-    print_plan_commands(plans)
+    # print_plans_command_line(plans)
+    print_plans_yaml(plans)
 
 
-def print_plan_commands(plans):
+def print_plans_command_line(plans):
     for plan in plans:
         txt = json.dumps(plan)
         print(f"qserver queue add plan '{txt}'")
+
+
+def print_plans_yaml(plans):
+    for plan in plans:
+        txt = yaml.dump(plan)
+        print(txt)
 
 
 if __name__ == "__main__":

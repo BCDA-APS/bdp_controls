@@ -7,7 +7,7 @@ Find centroid and width of central peak in image PV.
 
 from .analysis import analyze_image
 from .examples import plan_dict
-from .examples import print_plan_commands
+from .examples import print_plans_command_line
 import datetime
 import numpy as np
 import pvaccess
@@ -15,7 +15,7 @@ import pyRestTable
 import time
 
 IMAGE_PV = "bdpad:Pva1:Image"
-COST_GOAL = 0.01
+COST_GOAL = 0.25
 results = []
 
 
@@ -108,7 +108,7 @@ def monitor(pv):
     if total_cost < COST_GOAL:
         print("# !!! goal has been reached !!!")
     else:
-        print_plan_commands(
+        print_plans_command_line(
             [
                 plan_dict("move_fine_positioner", next_fine[0], next_fine[1]),
                 plan_dict("take_image", 0.01),
@@ -126,7 +126,7 @@ def runner():
     print("#"*40, "to restart simple simulation...")
     print("qserver history clear")
     print("qserver queue clear")
-    print_plan_commands(
+    print_plans_command_line(
         [
             plan_dict("prime_hdf_plugin"),
             plan_dict("move_fine_positioner", 0, 0),
