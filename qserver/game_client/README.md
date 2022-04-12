@@ -29,7 +29,7 @@ Center the image by adjusting the samplexy fine positioners.
 
 ![Simulated Instrument](../simulated-instrument.png)
 
-part | description
+component | description
 --- | ---
 `beam` | nominal value of 200 with small random noise
 `shutter` | *closed* or *open* (affects `adsimdet` image), **note**: *closed* by default
@@ -72,7 +72,7 @@ scientific technique (such as ptychography).*
 
 ## Tools
 
-- `bdp2202` conda environment
+- `bdp2022` conda environment
 - `bdp` (general purpose synApps xxx-style) IOC running
 - `bdpad` ADSimDetector IOC running
 - `bdpapi` softIoc running
