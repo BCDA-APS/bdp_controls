@@ -49,10 +49,8 @@ additional parameter to control a random jitter in the peak position.
    - EPICS PVaccess (streaming)
    - HDF5 file(s)
 2. All instrument commands through *queueserver*.
-3. Compute *cost* of image as function of fine position and image centroid.
+3. Compute *cost* of image as function of fine position and image centroid.  ![cost equation](./cost-equation.png)
 4. Minimize `cost(fx, fy, image)`
-
-![cost equation](./cost-equation.png)
 
 ## Model
 
