@@ -52,6 +52,8 @@ additional parameter to control a random jitter in the peak position.
 3. Compute *cost* of image as function of fine position and image centroid.
 4. Minimize `cost(fx, fy, image)`
 
+![cost equation](./cost-equation.png)
+
 ## Model
 
 For demonstration purposes, the analysis and decision-making model is purposely
