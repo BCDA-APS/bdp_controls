@@ -70,7 +70,7 @@ scientific technique (such as ptychography).*
 
 ## Tools
 
-- `bdp2202` conda environment
+- `bdp2022` conda environment
 - `bdp` (general purpose synApps xxx-style) IOC running
 - `bdpad` ADSimDetector IOC running
 - `bdpapi` softIoc running
