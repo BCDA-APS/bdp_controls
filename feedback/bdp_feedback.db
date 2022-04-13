@@ -13,5 +13,6 @@ record(waveform, "$(P)ImageFileName") {
 record(longout, "$(P)RunEngine_scan_id") {
   field(DESC, "scan number for Bluesky")
   field(VAL, 0)
+  field(DRVL, 0)
   field(LOPR, 0)
 }

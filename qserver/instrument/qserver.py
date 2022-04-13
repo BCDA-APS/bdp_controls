@@ -8,7 +8,9 @@ logger = logging.getLogger(__name__)
 logger.info(__file__)
 print(__file__)
 
+# most of these imports *provision* the RE environment with devices and plans
 from . import iconfig
+from .epics_signal_config import scan_id_epics
 from .qserver_framework import *
 
 from .devices import *
