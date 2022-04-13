@@ -16,6 +16,8 @@ from ..devices import image_file_created
 from ..devices import incident_beam
 from ..devices import samplexy
 from ..devices import shutter
+from ..qserver_framework import RE
+from .metadata_support import create_layout_file
 from .move_positioners import move_coarse_positioner
 from .move_positioners import move_fine_positioner
 from .shutter_controls import close_shutter
@@ -161,6 +163,23 @@ def take_image(atime, aperiod=None, nframes=1, compression="None", md=None):
     """
     # Force ophyd to request a new value from the IOC
     adsimdet.hdf1.file_template.get(use_monitor=False)
+
+    # write RunEngine and run metadata to HDF5 file
+    # via the HDF5 layout file.
+    try:
+        layout_file = "layout.xml"
+        re_md = RE.md.copy()
+        re_md.update(_md)
+        AD_IOC_MOUNT_PATH = pathlib.Path(iconfig["ADIOC_IMAGE_ROOT"])
+        BLUESKY_MOUNT_PATH = pathlib.Path(iconfig["BLUESKY_IMAGE_ROOT"])
+        create_layout_file(f"{BLUESKY_MOUNT_PATH / layout_file}", re_md)
+        yield from bps.mv(
+            adsimdet.hdf1.xml_file_name, f"{AD_IOC_MOUNT_PATH / layout_file}"
+        )
+    except Exception as exc:
+        logger.warning(
+            f"Problem creating {layout_file}: {exc}"
+        )
 
     uid = yield from bp.count([adsimdet], md=_md)
     # print(f"DIAGNOSTIC: {uid = }")
