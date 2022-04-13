@@ -61,6 +61,10 @@ class MyHDF5Plugin(FileStoreHDF5IterativeWrite, HDF5Plugin_V34):
     * ``generate_datum()`` - coordinate image storage metadata
     """
 
+    xml_file_name = ADComponent(
+        EpicsSignalWithRBV, "XMLFileName", string=True, kind="config"
+    )
+
     # fixes one problem, MUST end with path delimiter
     @property
     def write_path_template(self):
