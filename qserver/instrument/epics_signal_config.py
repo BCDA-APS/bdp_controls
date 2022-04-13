@@ -37,6 +37,15 @@ else:
 
 
 def epics_scan_id_source(*args, **kwargs):
+    """
+    Callback function for RunEngine.  Returns *next* scan_id to be used.
+
+    * Get current scan_id from PV.
+    * Apply lower limit of zero.
+    * Increment.
+    * Set PV with new value.
+    * Return new value.
+    """
     if scan_id_epics is None:
         raise RuntimeError(
             "epics_scan_id_source() called when"

@@ -17,7 +17,7 @@ from bluesky import plan_stubs as bps
 
 
 def set_scan_id(new_id=0):
-    """(Re)Set the scan_id.  default: 0"""
+    """(Re)Set the scan_id.  default: 0, lower limit of 0"""
     RE.md["scan_id"] = max(0, new_id)
     if scan_id_epics is None:
         # MUST yield something
