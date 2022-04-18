@@ -138,9 +138,6 @@ function start() {
         CMD="screen -dm -S ${SESSION_NAME} -h 5000 ${START_IOC_COMMAND}"
         ${CMD}
         sleep 1
-        # "${CAPUT}" "${IOC_PREFIX}busy" 0
-        "${CAPUT}" -S "${IOC_PREFIX}action" ""
-        "${CAPUT}" -S "${IOC_PREFIX}status" "EPICS ${DEFAULT_SESSION_NAME} IOC started"
     fi
 }
 

@@ -2,9 +2,6 @@
 Ophyd Devices for Bluesky measurements.
 """
 
-# always first, before ANY ophyd EPICS-based signals are created
-from . import default_timeouts
-
 # define the devices
 from .aps_source import *
 from .calculation_records import *

@@ -24,6 +24,7 @@ ADSIM_X_CALC_PV: "bdp:userCalc9"
 ADSIM_Y_CALC_PV: "bdp:userCalc10"
 INCIDENT_BEAM_SIMULATOR_CALC_PV: "bdp:userCalc2"
 HDF5_FILE_NAME_PV: bdpapi:ImageFileName
+RUN_ENGINE_SCAN_ID_PV: bdpapi:RunEngine_scan_id
 
 # paths
 ADIOC_IMAGE_ROOT: /tmp
