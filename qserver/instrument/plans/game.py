@@ -48,3 +48,19 @@ def new_sample(coarse_gain=10, fine_gain=0.1, jitter=2.5):
         )
     sample_name = (f"simulated_sample_{width['x']}_{width['y']}")
     RE.md["sample"] = sample_name
+
+
+def _start_standard_game():
+	"""(developer) Setup the game with the standard parameters."""
+    from . import move_coarse_positioner
+    from . import move_fine_positioner
+    from . import open_shutter
+    from . import prime_hdf_plugin
+    from . import take_image
+
+    yield from prime_hdf_plugin()
+    yield from move_coarse_positioner(0, 0)
+    yield from move_fine_positioner(0, 0)
+    yield from new_sample(0, 1, 0)
+    yield from open_shutter()
+    yield from take_image(0.01)
