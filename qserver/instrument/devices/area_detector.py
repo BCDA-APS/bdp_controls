@@ -261,39 +261,46 @@ def setup_attributes_file():
                 f"{AD_IOC_MOUNT_PATH / afile}"
             )
 
+try:
+	adsimdet = MySimDetector(iconfig["ADSIM_IOC_PREFIX"], name="adsimdet")
+	adsimdet.wait_for_connection(timeout=iconfig["PV_CONNECTION_TIMEOUT"])
 
-adsimdet = MySimDetector(iconfig["ADSIM_IOC_PREFIX"], name="adsimdet")
-adsimdet.wait_for_connection(timeout=iconfig["PV_CONNECTION_TIMEOUT"])
+	adsimdet.read_attrs.append("hdf1")
+	adsimdet.read_attrs.append("pva")
 
-adsimdet.read_attrs.append("hdf1")
-adsimdet.read_attrs.append("pva")
+	adsimdet.hdf1.create_directory.put(-5)
 
-adsimdet.hdf1.create_directory.put(-5)
+	adsimdet.cam.stage_sigs["image_mode"] = "Single"
+	adsimdet.cam.stage_sigs["num_images"] = 1
+	adsimdet.cam.stage_sigs["acquire_time"] = 0.1
+	adsimdet.cam.stage_sigs["acquire_period"] = 0.105
+	adsimdet.cam.stage_sigs["wait_for_plugins"] = "Yes"
+	adsimdet.hdf1.stage_sigs["file_template"] = "%s%s_%3.3d.h5"
 
-adsimdet.cam.stage_sigs["image_mode"] = "Single"
-adsimdet.cam.stage_sigs["num_images"] = 1
-adsimdet.cam.stage_sigs["acquire_time"] = 0.1
-adsimdet.cam.stage_sigs["acquire_period"] = 0.105
-adsimdet.cam.stage_sigs["wait_for_plugins"] = "Yes"
-adsimdet.hdf1.stage_sigs["file_template"] = "%s%s_%3.3d.h5"
+	if iconfig.get("ENABLE_AREA_DETECTOR_IMAGE_PLUGIN", False):
+		adsimdet.image.enable.put(1)
 
-if iconfig.get("ENABLE_AREA_DETECTOR_IMAGE_PLUGIN", False):
-    adsimdet.image.enable.put(1)
+	# WORKAROUND
+	# Even with `lazy_open=1`, ophyd checks if the area
+	# detector HDF5 plugin has been primed.  We might
+	# need to prime it.  Here's ophyd's test:
+	WARMUP_OK = iconfig.get("ALLOW_AREA_DETECTOR_WARMUP", False)
+	if WARMUP_OK and (np.array(adsimdet.hdf1.array_size.get()).sum() == 0):
+		logger.info(f"Priming {adsimdet.hdf1.name} ...")
+		adsimdet.hdf1.warmup()
+		logger.info(f"Enabling {adsimdet.image.name} plugin ...")
+		adsimdet.image.enable.put("Enable")
 
-# WORKAROUND
-# Even with `lazy_open=1`, ophyd checks if the area
-# detector HDF5 plugin has been primed.  We might
-# need to prime it.  Here's ophyd's test:
-WARMUP_OK = iconfig.get("ALLOW_AREA_DETECTOR_WARMUP", False)
-if WARMUP_OK and (np.array(adsimdet.hdf1.array_size.get()).sum() == 0):
-    logger.info(f"Priming {adsimdet.hdf1.name} ...")
-    adsimdet.hdf1.warmup()
-    logger.info(f"Enabling {adsimdet.image.name} plugin ...")
-    adsimdet.image.enable.put("Enable")
+	# peak new peak parameters
+	change_ad_simulated_image_parameters()
+	# have EPICS dither the peak position
+	dither_ad_peak_position()
 
-# peak new peak parameters
-change_ad_simulated_image_parameters()
-# have EPICS dither the peak position
-dither_ad_peak_position()
+	setup_attributes_file()
 
-setup_attributes_file()
+except TimeoutError as exc:
+	print(
+		f"Could not create area detector device: {exc}, using `None`"
+	)
+	adsimdet = None
+
