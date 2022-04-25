@@ -1,40 +1,18 @@
 # file: feedback_api.db
 #
-# purpose: R/W IOC variables for BDP control system feedback API
+# purpose: R/W IOC variables for BDP control system
 # usage:   softIoc -m P=bdpapi: -d feedback_api.db
-
-record(mbbo, "$(P)busy") {
-  field(DESC, "bluesky busy?")
-  field(VAL, 0)
-
-  # when RunEngine is not ready
-  field(ZRST, "unknown")
-  # TODO: How to set automatically to unknown after nn time period?
-
-  # when RunEngine is waiting for new action(s)
-  field(ONST, "idle")
-
-  # when RunEngine is running action(s)
-  field(TWST, "busy")
-}
-
-record(waveform, "$(P)action") {
-  field(DESC, "command input, 4k")
-  field(DTYP, "Soft Channel")
-  field(NELM, "4096")
-  field(FTVL, "CHAR")
-}
-
-record(waveform, "$(P)status") {
-  field(DESC, "current message, 4k")
-  field(DTYP, "Soft Channel")
-  field(NELM, "4096")
-  field(FTVL, "CHAR")
-}
 
 record(waveform, "$(P)ImageFileName") {
   field(DESC, "image file name, 2k")
   field(DTYP, "Soft Channel")
   field(NELM, "2048")
   field(FTVL, "CHAR")
+}
+
+record(longout, "$(P)RunEngine_scan_id") {
+  field(DESC, "scan number for Bluesky")
+  field(VAL, 0)
+  field(DRVL, 0)
+  field(LOPR, 0)
 }

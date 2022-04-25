@@ -15,6 +15,8 @@ logger.info(__file__)
 print(__file__)
 
 from . import iconfig
+from .epics_signal_config import epics_scan_id_source
+from .epics_signal_config import scan_id_epics
 import apstools
 import bluesky
 import bluesky_queueserver
@@ -50,7 +52,11 @@ versions = dict(
 )
 
 cat = databroker.catalog[iconfig["DATABROKER_CATALOG"]]
-RE = bluesky.RunEngine({})
+if scan_id_epics is None:
+    RE = bluesky.RunEngine({})
+else:
+    RE = bluesky.RunEngine({}, scan_id_source=epics_scan_id_source)
+    logger.info(r"RE 'scan_id' uses EPICS PV: {scan_id_epics.pvname}")
 RE.subscribe(cat.v1.insert)
 
 RE.md["databroker_catalog"] = cat.name
@@ -58,6 +64,8 @@ RE.md["login_id"] = USERNAME + "@" + HOSTNAME
 RE.md.update(iconfig.get("RUNENGINE_METADATA", {}))
 RE.md["versions"] = versions
 RE.md["pid"] = os.getpid()
+if scan_id_epics is not None:
+    RE.md["scan_id"] = scan_id_epics.get()
 
 # Set up SupplementalData.
 sd = bluesky.SupplementalData()
