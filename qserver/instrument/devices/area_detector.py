@@ -61,6 +61,12 @@ class MyHDF5Plugin(FileStoreHDF5IterativeWrite, HDF5Plugin_V34):
     * ``generate_datum()`` - coordinate image storage metadata
     """
 
+    # see https://github.com/bluesky/ophyd/pull/1035/files
+    # for release after ophyd 1.6.4
+    xml_file_name = ADComponent(
+        EpicsSignalWithRBV, "XMLFileName", string=True, kind="config"
+    )
+
 
 class MySimDetector(SingleTrigger, DetectorBase):
     """ADSimDetector"""

@@ -61,6 +61,6 @@ def _start_standard_game():
     yield from prime_hdf_plugin()
     yield from move_coarse_positioner(0, 0)
     yield from move_fine_positioner(0, 0)
-    yield from new_sample(0, 1, 0)
+    yield from new_sample(0, 1, 1.5)
     yield from open_shutter()
-    yield from take_image(0.01)
+    yield from take_image(0.01, compression="zlib")
