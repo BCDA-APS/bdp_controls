@@ -51,7 +51,7 @@ def new_sample(coarse_gain=10, fine_gain=0.1, jitter=2.5):
 
 
 def _start_standard_game():
-	"""(developer) Setup the game with the standard parameters."""
+    """(developer) Setup the game with the standard parameters."""
     from . import move_coarse_positioner
     from . import move_fine_positioner
     from . import open_shutter
