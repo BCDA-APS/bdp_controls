@@ -14,7 +14,9 @@ import pvaccess
 import pyRestTable
 import time
 
-IMAGE_PV = "bdpad:Pva1:Image"
+# PREFIX = "bdpad:"
+PREFIX = "bdpSimExample:"
+IMAGE_PV = f"{PREFIX}Pva1:Image"
 COST_GOAL = 0.25
 results = []
 
