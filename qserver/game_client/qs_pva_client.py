@@ -15,7 +15,7 @@ import pyRestTable
 import time
 
 IMAGE_PV = "bdpad:Pva1:Image"
-COST_GOAL = 0.25
+COST_GOAL = 0.5
 results = []
 
 
