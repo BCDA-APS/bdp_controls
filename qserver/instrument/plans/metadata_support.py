@@ -4,6 +4,7 @@ plans that support metadata
 
 __all__ = """
     add_metadata
+    add_metadata_kv
     remove_metadata_key
     show_metadata
 """.split()
@@ -15,6 +16,7 @@ logger.info(__file__)
 print(__file__)
 
 
+from ..qserver_framework import RE
 from bluesky import plan_stubs as bps
 import lxml.etree
 import pathlib
@@ -38,6 +40,14 @@ def add_metadata(**md):
     """
     yield from bps.null()
     RE.md.update(md)
+
+
+def add_metadata_kv(key, value):
+    """
+    Add the keyword arguments to the RunEngine metadata.
+    """
+    yield from bps.null()
+    RE.md[key] = value
 
 
 def remove_metadata_key(key):
@@ -120,6 +130,7 @@ def create_layout_file(filename, md):
             dtype = "string"
         else:
             continue
+        # logger.info("RE.md['%s'] = %s (%s)", k, v, dtype)
         metadata.append(
             _xml_element("attribute", name=k, value=f"{v}", type=dtype, source="constant")
         )
