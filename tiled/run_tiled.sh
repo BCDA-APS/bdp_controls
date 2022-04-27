@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# manage the bluesky tiled server process in a screen session
+# run the bluesky tiled server
 
 #--------------------
 # change the program defaults here
 CONDA_ENVIRONMENT=tiled
 DEFAULT_SESSION_NAME=tiled-server
-TILED_HOST=192.168.144.97
+TILED_HOST=${HOSTNAME}
 TILED_PORT=8010
 #--------------------
 

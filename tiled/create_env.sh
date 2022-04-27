@@ -20,6 +20,7 @@ conda create -y \
     anyio \
     appdirs \
     asgiref \
+    bitshuffle \
     blosc \
     cachetools \
     cachey \
@@ -37,17 +38,15 @@ conda create -y \
     heapdict \
     httpcore \
     httptools \
-    httpx \ \
+    httpx \
     jinja2 \
     jmespath \
     locket \
     lz4 \
-    msgpack \
     openpyxl \
     orjson \
     pandas \
     partd \
-    prometheus-client \
     psutil \
     pyarrow \
     pyasn1 \
@@ -72,6 +71,10 @@ conda create -y \
     websockets \
     xarray \
     -c defaults -c conda-forge
+
+    # prometheus-client \
+    # msgpack \
+    # hdf5plugins \
 
 conda activate "${ENV_NAME}"
 
