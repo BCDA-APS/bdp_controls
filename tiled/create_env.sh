@@ -35,6 +35,7 @@ conda create -y \
     greenlet \
     h11 \
     h5netcdf \
+    hdf5plugin \
     heapdict \
     httpcore \
     httptools \
@@ -74,8 +75,6 @@ conda create -y \
 
     # prometheus-client \
     # msgpack \
-    # hdf5plugins \
-
 conda activate "${ENV_NAME}"
 
 # see PyMongo version dependency table
