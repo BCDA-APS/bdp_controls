@@ -25,6 +25,10 @@ ADSIM_Y_CALC_PV: "bdpgp:userCalc10"
 INCIDENT_BEAM_SIMULATOR_CALC_PV: "bdpgp:userCalc2"
 HDF5_FILE_NAME_PV: bdpapi:ImageFileName
 RUN_ENGINE_SCAN_ID_PV: bdpapi:RunEngine_scan_id
+FAST_UPDATE_X_VAL: bdpgp:gp:float18
+FAST_UPDATE_X_RBV: bdpgp:gp:float8
+FAST_UPDATE_Y_VAL: bdpgp:gp:float19
+FAST_UPDATE_T_RBV: bdpgp:gp:float9
 
 # paths
 #ADIOC_IMAGE_ROOT: /tmp
