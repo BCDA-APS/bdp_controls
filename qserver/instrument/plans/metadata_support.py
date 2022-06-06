@@ -106,9 +106,9 @@ def create_layout_file(filename, md):
     instrument = _xml_group(entry, "instrument", "NXinstrument")
     detector = _xml_group(instrument, "detector", "NXdetector")
     ds = _xml_element("dataset", name="data", source="detector", det_default="true")
-    ds.append(
-        _xml_element("attribute", name="target", value="/entry/instrument/detector/data", type="string", source="constant")
-    )
+    # ds.append(
+    #     _xml_element("attribute", name="target", value="/entry/instrument/detector/data", type="string", source="constant")
+    # )
     detector.append(ds)
     NDAttributes = _xml_group(detector, "NDAttributes")
     NDAttributes.append(
