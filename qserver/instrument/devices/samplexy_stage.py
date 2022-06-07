@@ -11,6 +11,7 @@ logger.info(__file__)
 print(__file__)
 
 from .. import iconfig
+from .simulated_pzt_stage import SimulatedPiezoXyStageWithReadback
 from ophyd import Component
 from ophyd import Device
 from ophyd import EpicsMotor
@@ -30,7 +31,9 @@ class XyPiezoStage(Device):
 
 class CoarseFineStage(Device):
     coarse = Component(XyMotorStage, "")
-    fine = Component(XyPiezoStage, "")
+    # fine = Component(XyPiezoStage, "")
+    # TODO: check existing usage to change from Signal to Positioner interface
+    fine = Component(SimulatedPiezoXyStageWithReadback, "")
 
 
 samplexy = CoarseFineStage("", name="samplexy")
