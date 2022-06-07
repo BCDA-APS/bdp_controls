@@ -137,6 +137,12 @@ class SimulatedConstantVelocityPositioner(PVPositionerSoftDoneWithStop):
 
 
 class SimulatedPiezoXyStageWithReadback(Device):
+    """
+    Simulated Piezo X,Y Stage with Velocity-Controlled Readbacks.
+
+        fastxy = SimulatedPiezoXyStageWithReadback("", name="fastxy")
+
+    """
     x = Component(
         SimulatedConstantVelocityPositioner, 
         "",
@@ -157,6 +163,3 @@ class SimulatedPiezoXyStageWithReadback(Device):
     @property
     def inposition(self):
         return self.x.inposition and self.y.inposition
-
-
-# fastxy = SimulatedPiezoXyStageWithReadback("", name="fastxy")
