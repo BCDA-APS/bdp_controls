@@ -1,5 +1,5 @@
 """
-Simulated Fast X,Y Stage: fastxy
+Simulated Piezo X,Y Stage with Velocity-Controlled Readbacks.
 
 Simulates a piezo stage with X, Y with positioners.  Each has a setpoint,
 readback, and velocity control.  Readback will update in a thread during
@@ -16,7 +16,7 @@ each move at constant velocity and time intervals.
     Default: 1.0
 """
 
-__all__ = ["fastxy"]
+# __all__ = ["fastxy"]
 
 import logging
 logger = logging.getLogger(__name__)
@@ -41,7 +41,33 @@ DEFAULT_VELOCITY = 1
 DELAY_AFTER_CAPUT = 0.000_1
 LOOP_SLEEP = 0.000_1
 MINIMUM_VELOCITY = 0.000_1
-MAXIMUM_VELOCITY = 100
+MAXIMUM_VELOCITY = 10_000
+
+
+class LimitedVelocitySignal(Signal):
+    """Override the default limits of (0,0)."""
+
+    @property
+    def limits(self):
+        """The control limits (low, high), such that low <= value <= high."""
+        return (MINIMUM_VELOCITY, MAXIMUM_VELOCITY)
+
+    def check_value(self, value):
+        """Check if the value is within the setpoint PV's control limits."""
+        super().check_value(value)
+
+        if value is None:
+            raise ValueError('Cannot write None to epics PVs')
+
+        low_limit, high_limit = self.limits
+        if low_limit >= high_limit:
+            return
+
+        if not (low_limit <= value <= high_limit):
+            raise LimitError(
+                f"{self.name}: value {value}"
+                f" outside of range {low_limit} .. {high_limit}"
+            )
 
 
 class SimulatedConstantVelocityPositioner(PVPositionerSoftDoneWithStop):
@@ -49,7 +75,9 @@ class SimulatedConstantVelocityPositioner(PVPositionerSoftDoneWithStop):
     readback = FormattedComponent(
         EpicsSignal, "{prefix}{_readback_pv}", kind="hinted", auto_monitor=True
     )
-    velocity = Component(Signal, value=DEFAULT_VELOCITY, kind="config")
+    velocity = Component(
+        LimitedVelocitySignal, value=DEFAULT_VELOCITY, kind="config"
+    )
     rb_update_period = Component(
         Signal, value=DEFAULT_UPDATE_PERIOD, kind="config"
     )
@@ -108,7 +136,7 @@ class SimulatedConstantVelocityPositioner(PVPositionerSoftDoneWithStop):
         super().stop(success=success)
 
 
-class FastUpdateXyStage(Device):
+class SimulatedPiezoXyStageWithReadback(Device):
     x = Component(
         SimulatedConstantVelocityPositioner, 
         "",
@@ -126,5 +154,9 @@ class FastUpdateXyStage(Device):
         kind="hinted",
     )
 
+    @property
+    def inposition(self):
+        return self.x.inposition and self.y.inposition
 
-fastxy = FastUpdateXyStage("", name="fastxy")
+
+# fastxy = SimulatedPiezoXyStageWithReadback("", name="fastxy")

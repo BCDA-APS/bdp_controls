@@ -9,7 +9,6 @@ from .feedback_api import *
 from .ioc_stats import *
 from .samplexy_stage import *
 from .simulated_beam import *
-from .fastxy_stage import *
 from .simulated_shutter import *
 
 # area detector comes after previous devices are defined
