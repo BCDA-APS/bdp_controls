@@ -30,7 +30,7 @@ def new_sample(coarse_gain=10, fine_gain=0.1, jitter=2.5):
         calc.reset()
         axis = "x" if calc == ad_x_calc else "y"
         coarse = getattr(samplexy.coarse, axis.lower())
-        fine = getattr(samplexy.fine, axis.lower())
+        fine = getattr(samplexy.fine.readback, axis.lower())
         center[axis] = 512 + 400*(2*random.random()-1)
         width[axis] = int(80 + 35*(2*random.random()-1))
         width_signal = getattr(det.cam.peak_width, f"peak_width_{axis}")

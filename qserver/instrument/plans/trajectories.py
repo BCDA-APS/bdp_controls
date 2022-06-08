@@ -104,7 +104,6 @@ def trajectory_plan(
 
     """
     det = adsimdet  # local name
-    # xy = fastxy  # TODO: switch to fine motor stage
     xy = samplexy.fine
 
     # If not constrained, then plan will raise LimitError if out of limits.

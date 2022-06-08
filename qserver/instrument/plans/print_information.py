@@ -31,10 +31,10 @@ import pyRestTable
 def _positions():
     """Return a dictionary with positioners and values."""
     info = {}
-    for o in (samplexy.coarse.x, samplexy.coarse.y):
-        info[f"{o.name}"] = o.position
-    for o in (samplexy.fine.x, samplexy.fine.y):
-        info[f"{o.name}"] = o.get()
+    for xy in (samplexy.coarse, samplexy.fine):
+        for ax in "x y".split():
+            o = getattr(xy, ax)
+            info[f"{o.name}"] = o.position
     return info
 
 
@@ -71,7 +71,7 @@ def information():
         info[f"{o.name}_velocity"] = o.velocity.get()
         info[f"{o.name}_limit_high"] = o.high_limit_travel.get()
         info[f"{o.name}_limit_low"] = o.low_limit_travel.get()
-    for o in (samplexy.fine.x, samplexy.fine.y):
+    for o in (samplexy.fine.readback.x, samplexy.fine.readback.y):
         info[f"{o.name}_pv"] = o.pvname
         info[f"{o.name}_units"] = o.metadata["units"]
         info[f"{o.name}_limit_high"] = o.limits[1]
