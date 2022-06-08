@@ -28,7 +28,7 @@ RUN_ENGINE_SCAN_ID_PV: "bdpapi:RunEngine_scan_id"
 FAST_UPDATE_X_VAL: "bdpgp:gp:float11"
 FAST_UPDATE_X_RBV: "bdpgp:gp:float1"
 FAST_UPDATE_Y_VAL: "bdpgp:gp:float12"
-FAST_UPDATE_T_RBV: "bdpgp:gp:float2"
+FAST_UPDATE_Y_RBV: "bdpgp:gp:float2"
 
 # paths
 #ADIOC_IMAGE_ROOT: /tmp
@@ -39,7 +39,7 @@ AD_IMAGE_SUBDIR: "adsimdet/%Y/%m/%d/"
 IMAGE_RUN_XREF_FILE: xref_image_run.yml
 
 # permissions
-ALLOW_AREA_DETECTOR_WARMUP: false
+ALLOW_AREA_DETECTOR_WARMUP: true
 ENABLE_AREA_DETECTOR_IMAGE_PLUGIN: true
 APS_IN_BASELINE: true
 ENABLE_CALCS: true

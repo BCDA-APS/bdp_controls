@@ -39,7 +39,7 @@ def new_sample(coarse_gain=10, fine_gain=0.1, jitter=2.5):
             calc.channels.A.input_value, center[axis],
             calc.channels.B.input_pv, coarse.user_readback.pvname,
             calc.channels.C.input_value, coarse_gain,
-            calc.channels.D.input_pv, fine.pvname,
+            calc.channels.D.input_pv, fine.readback.pvname,
             calc.channels.E.input_value, fine_gain,
             calc.channels.F.input_value, jitter,
             calc.calculation, "A+B*C+D*E+F*(2*RNDM-1)",

@@ -31,8 +31,6 @@ class XyPiezoStage(Device):
 
 class CoarseFineStage(Device):
     coarse = Component(XyMotorStage, "")
-    # fine = Component(XyPiezoStage, "")
-    # TODO: check existing usage to change from Signal to Positioner interface
     fine = Component(SimulatedPiezoXyStageWithReadback, "")
 
 
