@@ -207,7 +207,8 @@ def _xml_attributes():
         specifications.append([f"{m.name}", f"{getattr(m, 'user_readback').pvname}", "DBR_NATIVE"])
         specifications.append([f"{m.name}_setpoint", f"{getattr(m, 'user_setpoint').pvname}", "DBR_NATIVE"])
         m = getattr(samplexy.fine, axis)
-        specifications.append([f"{m.name}", f"{m.pvname}", "DBR_NATIVE"])
+        specifications.append([f"{m.name}", f"{getattr(m, 'readback').pvname}", "DBR_NATIVE"])
+        specifications.append([f"{m.name}_setpoint", f"{getattr(m, 'setpoint').pvname}", "DBR_NATIVE"])
     for attr, pv, dbrtype in specifications:
         xml.append(
             '  <Attribute'
