@@ -153,7 +153,6 @@ def trajectory_plan(
         det.cam.stage_sigs["image_mode"] = "Continuous"
         det.cam.stage_sigs["trigger_mode"] = "Internal"
         det.cam.stage_sigs["num_exposures"] = 1
-        # TODO: add xy position PVs as NDattributes
 
         xy.stage_sigs["x.rb_update_period"] = update_period
         xy.stage_sigs["y.rb_update_period"] = update_period
