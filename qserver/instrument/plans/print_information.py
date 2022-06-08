@@ -71,9 +71,12 @@ def information():
         info[f"{o.name}_velocity"] = o.velocity.get()
         info[f"{o.name}_limit_high"] = o.high_limit_travel.get()
         info[f"{o.name}_limit_low"] = o.low_limit_travel.get()
-    for o in (samplexy.fine.readback.x, samplexy.fine.readback.y):
-        info[f"{o.name}_pv"] = o.pvname
-        info[f"{o.name}_units"] = o.metadata["units"]
+    for o in (samplexy.fine.x, samplexy.fine.y):
+        info[f"{o.name}_pv"] = o.readback.pvname
+        info[f"{o.name}_units"] = o.readback.metadata["units"]
+        info[f"{o.name}_setpoint"] = o.setpoint.get()
+        info[f"{o.name}_setpoint_pv"] = o.setpoint.pvname
+        info[f"{o.name}_velocity"] = o.velocity.get()
         info[f"{o.name}_limit_high"] = o.limits[1]
         info[f"{o.name}_limit_low"] = o.limits[0]
 
