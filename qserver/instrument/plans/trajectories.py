@@ -75,8 +75,71 @@ from ..devices.simulated_pzt_stage import MAXIMUM_VELOCITY
 from ..qserver_framework import RE
 from bluesky import plan_stubs as bps
 from bluesky import preprocessors as bpp
+import math
+import numpy as np
 
 
+def sublists(liszt, n):
+    """Yield successive n-sized sublists from liszt."""
+    for i in range(0, len(liszt), n):
+        yield liszt[i : i + n]
+
+
+def is_odd(n):
+    return n % 2 == 1
+
+
+def create_random_grid(
+    x0, x1, y0, y1, n=25, snake=True, corners=True, sort_x_1st=True
+):
+    """
+    Create a sorted list of random X,Y positions within a region of interest.
+
+    Sort the list:
+
+    - sort on first positioner (default: X)
+    - if n>8, sort by sections (of size sqrt(n))
+      - sort each section on second positioner (default: Y) according to snake term
+    """
+
+    def sort_by_x(xy):
+        return xy[0]
+
+    def sort_by_y(xy):
+        return xy[1]
+
+    sorters = (sort_by_x, sort_by_y) if sort_x_1st else (sort_by_y, sort_by_x)
+
+    coords = []
+    nr = n
+    if corners and n >= 4:  # include the corners
+        coords += [
+            (x0, y0),
+            (x0, y1),
+            (x1, y1),
+            (x1, y0),
+        ]
+        nr -= 4
+    coords += list(
+        zip(
+            x0 + (x1 - x0) * np.random.rand(nr),
+            y0 + (y1 - y0) * np.random.rand(nr)
+        )
+    )
+    coords = sorted(coords, key=sorters[0])
+
+    if n > 8:
+        # sort by sections
+        num_in_section = int(math.sqrt(n))
+        arr = []
+        for row, chunk in enumerate(sublists(coords, num_in_section)):
+            arr += sorted(chunk, key=sorters[1], reverse=(snake and is_odd(row)))
+        coords = arr
+
+    return list(coords)
+
+
+# TODO: refactor to use create_random_grid() for set of waypoints at fixed velocities
 def trajectory_plan(
     x0, x1, y0, y1,
     duration=1, update_period=0.01, t_exposure=0.001,
