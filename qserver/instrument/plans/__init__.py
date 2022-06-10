@@ -10,3 +10,4 @@ from .metadata_support import *
 from .move_positioners import *
 from .print_information import *
 from .shutter_controls import *
+from .trajectories import *

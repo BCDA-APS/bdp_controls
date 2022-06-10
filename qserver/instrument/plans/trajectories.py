@@ -57,7 +57,7 @@ Move X & Y on non-linear path:
     run.metadata
 """
 
-__all__ = []
+__all__ = ["trajectory_plan"]
 
 import logging
 logger = logging.getLogger(__name__)
@@ -139,10 +139,10 @@ def create_random_grid(
     return list(coords)
 
 
-# TODO: refactor to use create_random_grid() for set of waypoints at fixed velocities
 def trajectory_plan(
-    x0, x1, y0, y1,
-    duration=1, update_period=0.01, t_exposure=0.001,
+    x0, x1, y0, y1, n_points,
+    update_period=0.01, t_exposure=0.001,
+    vx=1, vy=1,
     md=None
 ):
     """
@@ -158,21 +158,27 @@ def trajectory_plan(
         Starting Y position.
     y1 float:
         Ending Y position.
-    duration float:
-        Time for complete trajectory.
+    n_points int:
+        Number of points.
     update_period float:
         Update period (s) for the readback values of the xy stage.
     t_exposure float:
         Area detector image exposure time (s).
+    vx float:
+        Velocity of X positioner (EGU/s).
+    vy float:
+        Velocity of Y positioner (EGU/s).
 
+    NOTES:
+
+    * 
     """
+    if n_points < 1:
+        yield from bps.null()
+        return
+
     det = adsimdet  # local name
     xy = samplexy.fine
-
-    # If not constrained, then plan will raise LimitError if out of limits.
-    vx = abs(x1 - x0) / duration
-    vy = abs(y1 - y0) / duration
-    # print(f"(DEBUG) {vx=}  {vy=}")
 
     # metadata
     _md = {
@@ -183,7 +189,7 @@ def trajectory_plan(
         "x_end": x1,
         "y_start": y0,
         "y_end": y1,
-        "duration": duration,
+        "n_points": n_points,
         "exposure_time": t_exposure,
         "update_period": update_period,
         "image mode": "Continuous",
@@ -233,6 +239,10 @@ def trajectory_plan(
         det.hdf1.disable_on_stage()
         det.pva.enable_on_stage()
 
+    waypoints = create_random_grid(
+        x0, x1, y0, y1, n_points, snake=True, corners=True, sort_x_1st=True
+    )
+
     # describe the trajectory scan
     monitored_signals = [
         xy.x.readback, xy.y.readback,
@@ -252,12 +262,18 @@ def trajectory_plan(
         yield from bps.mv(det.cam.acquire, 1)
         # print("images started")
 
-        yield from bps.abs_set(xy.x, x1, group="motion")
-        yield from bps.abs_set(xy.y, y1, group="motion")
-        # print("motion started")
+        # iterate over the trajectory waypoints
+        for x, y in waypoints:
+            # TODO: why not this?  yield from bps.mv(xy.x, x1, xy.y, y1)
+            # Does not catch end of motion?
 
-        # wait for motion to end, then stop AD
-        yield from bps.wait(group="motion")
+            yield from bps.abs_set(xy.x, x, group="motion")
+            yield from bps.abs_set(xy.y, y, group="motion")
+            # print("motion started")
+
+            # wait for motion to end, then stop AD
+            yield from bps.wait(group="motion")
+
         yield from bps.mv(det.cam.acquire, 0)
 
     # before we start ...
@@ -268,6 +284,7 @@ def trajectory_plan(
         det.hdf1.enable, "Disable",  # _before_ staging
         det.pva.enable, "Enable",
     )
+    # move to start position before running the trajectory
     yield from bps.mv(
         xy.x, x0,
         xy.y, y0,
