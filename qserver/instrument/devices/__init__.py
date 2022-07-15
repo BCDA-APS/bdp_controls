@@ -14,5 +14,6 @@ from .samplexy_stage import *
 from .simulated_beam import *
 from .simulated_shutter import *
 
-# area detector comes after previous devices are defined
-from .ad_simdet import *
+# area detectors come after previous devices are defined
+from .ad_sim import *
+from .ad_pva import *

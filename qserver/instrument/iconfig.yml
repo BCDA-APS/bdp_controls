@@ -15,6 +15,7 @@ RUNENGINE_METADATA:
   milestone: BDP M6 demo
 
 # device PVs
+IOC_PREFIX_ADPVA: "13PVA1:"
 IOC_PREFIX_ADSIM: "bdpSimExample:"
 IOC_PREFIX_GP: "bdpgp:"
 PV_CA_ADSIM_X_CALC: "bdpgp:userCalc9"
