@@ -16,7 +16,7 @@ from .. import iconfig
 from ophyd import EpicsSignal
 
 
-PV = iconfig["HDF5_FILE_NAME_PV"]
+PV = iconfig["PV_CA_HDF5_FILE_NAME"]
 image_file_created = EpicsSignal(
     PV, name="image_file_created", string=True
 )

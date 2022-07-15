@@ -25,7 +25,7 @@ class IocInfoDevice(Device):
     uptime = Component(EpicsSignalRO, "UPTIME")
 
 
-gp_stats = IocInfoDevice(iconfig["GP_IOC_PREFIX"], name="gp_stats")
+gp_stats = IocInfoDevice(iconfig["IOC_PREFIX_GP"], name="gp_stats")
 
 # Too bad, this ADSimDetector does not have iocStats
 # ad_stats = IocInfoDevice("ad:", name="ad_stats")

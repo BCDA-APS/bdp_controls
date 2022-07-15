@@ -146,16 +146,16 @@ class SimulatedPiezoXyStageWithReadback(Device):
     x = Component(
         SimulatedConstantVelocityPositioner, 
         "",
-        readback_pv=iconfig["FAST_UPDATE_X_RBV"],
-        setpoint_pv=iconfig["FAST_UPDATE_X_VAL"],
+        readback_pv=iconfig["PV_CA_FAST_UPDATE_X_RBV"],
+        setpoint_pv=iconfig["PV_CA_FAST_UPDATE_X_VAL"],
         tolerance=0.0002,
         kind="hinted",
     )
     y = Component(
         SimulatedConstantVelocityPositioner, 
         "",
-        readback_pv=iconfig["FAST_UPDATE_Y_RBV"],
-        setpoint_pv=iconfig["FAST_UPDATE_Y_VAL"],
+        readback_pv=iconfig["PV_CA_FAST_UPDATE_Y_RBV"],
+        setpoint_pv=iconfig["PV_CA_FAST_UPDATE_Y_VAL"],
         tolerance=0.0002,
         kind="hinted",
     )

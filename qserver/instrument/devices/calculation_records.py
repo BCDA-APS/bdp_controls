@@ -19,13 +19,13 @@ from apstools.synApps import SwaitRecord
 from ophyd import EpicsSignal
 
 
-PV = iconfig.get("INCIDENT_BEAM_SIMULATOR_CALC_PV")
+PV = iconfig.get("PV_CA_INCIDENT_BEAM_SIMULATOR_CALC")
 incident_beam_calc = SwaitRecord(PV, name="incident_beam_calc")
 
-PV = iconfig.get("ADSIM_X_CALC_PV")
+PV = iconfig.get("PV_CA_ADSIM_X_CALC")
 ad_x_calc = SwaitRecord(PV, name="ad_x_calc")
 
-PV = iconfig.get("ADSIM_Y_CALC_PV")
+PV = iconfig.get("PV_CA_ADSIM_Y_CALC")
 ad_y_calc = SwaitRecord(PV, name="ad_y_calc")
 
 # Normally, do not do _any_ actions (like these) in the instrument
@@ -33,7 +33,7 @@ ad_y_calc = SwaitRecord(PV, name="ad_y_calc")
 # case, the actions are probably OK.  Most users forget they even exist.
 # These steps enable all the userCalcN and userCalcoutN records to process.
 if iconfig.get("ENABLE_CALCS", False):
-    PV = iconfig.get("GP_IOC_PREFIX")
+    PV = iconfig.get("IOC_PREFIX_GP")
 
     # assumes all calcs are in same IOC (same prefix)
     # using the naming style of synApps xxx IOC

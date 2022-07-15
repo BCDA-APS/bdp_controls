@@ -230,10 +230,10 @@ def trajectory_plan(
             xy.stage_sigs["y.velocity"] = vy
 
         # print("(DEBUG) Stage prep complete")
-        print(f"(DEBUG) {det.stage_sigs=}")
-        print(f"(DEBUG) {det.cam.stage_sigs=}")
-        # print(f"(DEBUG) {det.hdf1.stage_sigs=}")
-        # print(f"(DEBUG) {det.pva.stage_sigs=}")
+        print(f"(DEBUG) det.stage_sigs={det.stage_sigs}")
+        print(f"(DEBUG) det.cam.stage_sigs={det.cam.stage_sigs}")
+        # print(f"(DEBUG) det.hdf1.stage_sigs={det.hdf1.stage_sigs}")
+        # print(f"(DEBUG) det.pva.stage_sigs={det.pva.stage_sigs}")
 
         det.hdf1.kind = "omitted"
         det.hdf1.disable_on_stage()
@@ -253,10 +253,10 @@ def trajectory_plan(
     @bpp.run_decorator(md=_md)
     def execute_the_trajectory_scan():
         # print("(DEBUG) execute_the_trajectory_scan() starting")
-        print(f"(DEBUG) {det.cam.image_mode.get()=}")
-        # print(f"(DEBUG) {det.hdf1.enable.get()=}")
-        # print(f"(DEBUG) {det.pva.enable.get()=}")
-        # print(f"(DEBUG) {xy.read()=}")
+        print(f"(DEBUG) det.cam.image_mode={det.cam.image_mode.get()}")
+        # print(f"(DEBUG) det.hdf1.enable={det.hdf1.enable.get()}")
+        # print(f"(DEBUG) det.pva.enable={det.pva.enable.get()}")
+        # print(f"(DEBUG) xy={xy.read()}")
 
         # start
         yield from bps.mv(det.cam.acquire, 1)

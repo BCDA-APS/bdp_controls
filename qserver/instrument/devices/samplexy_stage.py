@@ -20,13 +20,13 @@ from ophyd import MotorBundle
 
 
 class XyMotorStage(MotorBundle):
-    x = Component(EpicsMotor, iconfig["XY_STAGE_X_PV"])
-    y = Component(EpicsMotor, iconfig["XY_STAGE_Y_PV"])
+    x = Component(EpicsMotor, iconfig["PV_CA_XY_STAGE_X"])
+    y = Component(EpicsMotor, iconfig["PV_CA_XY_STAGE_Y"])
 
 
 class XyPiezoStage(Device):
-    x = Component(EpicsSignal, iconfig["PZT_X_PV"])
-    y = Component(EpicsSignal, iconfig["PZT_Y_PV"])
+    x = Component(EpicsSignal, iconfig["PV_CA_PZT_X"])
+    y = Component(EpicsSignal, iconfig["PV_CA_PZT_Y"])
 
 
 class CoarseFineStage(Device):

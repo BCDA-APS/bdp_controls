@@ -238,7 +238,7 @@ def setup_attributes_file():
             )
 
 try:
-    adsimdet = MySimDetector(iconfig["ADSIM_IOC_PREFIX"], name="adsimdet")
+    adsimdet = MySimDetector(iconfig["IOC_PREFIX_ADSIM"], name="adsimdet")
     adsimdet.wait_for_connection(timeout=iconfig["PV_CONNECTION_TIMEOUT"])
 
     adsimdet.read_attrs.append("hdf1")

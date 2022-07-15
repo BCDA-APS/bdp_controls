@@ -193,7 +193,7 @@ def take_image(atime, aperiod=None, nframes=1, compression="None", md=None):
         path = pathlib.Path(r["root"]) / r["resource_path"]
         fname = pathlib.Path(adsimdet.hdf1.full_file_name.get())
         hdffile = path.parent / fname.name
-        print(f"DIAGNOSTIC: {hdffile = },  {hdffile.exists()=}")
+        print(f"DIAGNOSTIC: {hdffile},  exists={hdffile.exists()}")
         logger.info("Image file '%s' (exists: %s)", hdffile, hdffile.exists())
         yield from bps.mv(image_file_created, str(hdffile))
         update_cross_reference_file(uid, hdffile)

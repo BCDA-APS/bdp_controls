@@ -29,7 +29,7 @@ if not EpicsSignalBase._EpicsSignalBase__any_instantiated:
         connection_timeout=iconfig.get("PV_CONNECTION_TIMEOUT", TIMEOUT),
     )
 
-pvname = iconfig.get("RUN_ENGINE_SCAN_ID_PV")
+pvname = iconfig.get("PV_CA_RUN_ENGINE_SCAN_ID")
 if pvname is None:
     scan_id_epics = None
 else:
@@ -49,7 +49,7 @@ def epics_scan_id_source(*args, **kwargs):
     if scan_id_epics is None:
         raise RuntimeError(
             "epics_scan_id_source() called when"
-            " 'RUN_ENGINE_SCAN_ID_PV' is"
+            " 'PV_CA_RUN_ENGINE_SCAN_ID' is"
              "undefined in 'iconfig.yml' file."
         )
     new_scan_id = max(scan_id_epics.get(), 0) + 1

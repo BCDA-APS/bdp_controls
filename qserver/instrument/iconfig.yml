@@ -12,23 +12,26 @@ RUNENGINE_METADATA:
   beamline_id: BDP
   instrument_name: APS-U Beamline Data Pipelines project in 2022
   proposal_id: bdp2022
+  milestone: BDP M6 demo
 
 # device PVs
-ADSIM_IOC_PREFIX: "bdpSimExample:"
-GP_IOC_PREFIX: "bdpgp:"
-XY_STAGE_X_PV: "bdpgp:m9"
-XY_STAGE_Y_PV: "bdpgp:m10"
-PZT_X_PV: "bdpgp:gp:float1"
-PZT_Y_PV: "bdpgp:gp:float2"
-ADSIM_X_CALC_PV: "bdpgp:userCalc9"
-ADSIM_Y_CALC_PV: "bdpgp:userCalc10"
-INCIDENT_BEAM_SIMULATOR_CALC_PV: "bdpgp:userCalc2"
-HDF5_FILE_NAME_PV: "bdpapi:ImageFileName"
-RUN_ENGINE_SCAN_ID_PV: "bdpapi:RunEngine_scan_id"
-FAST_UPDATE_X_VAL: "bdpgp:gp:float11"
-FAST_UPDATE_X_RBV: "bdpgp:gp:float1"
-FAST_UPDATE_Y_VAL: "bdpgp:gp:float12"
-FAST_UPDATE_Y_RBV: "bdpgp:gp:float2"
+IOC_PREFIX_ADSIM: "bdpSimExample:"
+IOC_PREFIX_GP: "bdpgp:"
+PV_CA_ADSIM_X_CALC: "bdpgp:userCalc9"
+PV_CA_ADSIM_Y_CALC: "bdpgp:userCalc10"
+PV_CA_FAST_UPDATE_X_RBV: "bdpgp:gp:float1"
+PV_CA_FAST_UPDATE_X_VAL: "bdpgp:gp:float11"
+PV_CA_FAST_UPDATE_Y_RBV: "bdpgp:gp:float2"
+PV_CA_FAST_UPDATE_Y_VAL: "bdpgp:gp:float12"
+PV_CA_HDF5_FILE_NAME: "bdpapi:ImageFileName"
+PV_CA_IMAGE_FILE_NAME: "bdpapi:ImageFileName"
+PV_CA_INCIDENT_BEAM_SIMULATOR_CALC: "bdpgp:userCalc2"
+PV_CA_PZT_X: "bdpgp:gp:float1"
+PV_CA_PZT_Y: "bdpgp:gp:float2"
+PV_CA_RUN_ENGINE_SCAN_ID: "bdpapi:RunEngine_scan_id"
+PV_CA_XY_STAGE_X: "bdpgp:m9"
+PV_CA_XY_STAGE_Y: "bdpgp:m10"
+PV_PVA_IMAGE: "bluesky:image"
 
 # paths
 #ADIOC_IMAGE_ROOT: /tmp
