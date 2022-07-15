@@ -2,6 +2,14 @@
 EpicsSignal: receives file name, sends image via PVAccess
 """
 
+__all__ = """
+    img2pva
+    image_file_list
+""".split()
+
+print(__file__)
+
+from .. import iconfig
 from .blueskyImageServer import BlueskyImageServer
 from apstools.utils import run_in_thread
 from ophyd import EpicsSignal
@@ -14,8 +22,8 @@ import time
 
 logger = logging.getLogger(__name__)
 M6_GALLERY = pathlib.Path.home() / "voyager" / "BDP" / "M6-gallery"
-PV_CA_IMAGE_FILE_NAME = "bdpapi:ImageFileName"
-PV_PVA_IMAGE = "bluesky:image"
+PV_CA_IMAGE_FILE_NAME = iconfig["PV_CA_IMAGE_FILE_NAME"]
+PV_PVA_IMAGE = iconfig["PV_PVA_IMAGE"]
 WAIT_BUSY_LOOP = 1.0 / 5_000  # at most, 5k frames per second
 
 
@@ -124,49 +132,9 @@ class ImageFileToPvaSignal(EpicsSignal):
     #         logger.debug(f"waited {1000 * (time.time() - t0):.3f} ms")
 
 
-def demo2():
-    img2pva = ImageFileToPvaSignal(
-        PV_CA_IMAGE_FILE_NAME, name="image_file_name", string=True
-    )
-    img2pva.wait_for_connection()
-
-    logger.debug(f"image files: {IMAGE_FILES}")
-
-    for fname in IMAGE_FILES:
-        img2pva.wait_server()
-        print(f"image file name={fname}")
-        t0 = time.time()
-        img2pva.put(fname)
-        logger.debug("dt=%.3f ms", 1000 * (time.time() - t0))
-
-
-def demo1():
-    img2pva = ImageFileToPvaSignal(
-        PV_CA_IMAGE_FILE_NAME, name="image_file_name", string=True
-    )
-    img2pva.wait_for_connection()
-    img2pva.start_pva_server()
-
-    time.sleep(10)  # allow clients time to (re)connect
-    print("PVA server started now. Look for {PV_PVA_IMAGE}")
-
-    t0 = time.time()
-    for fname in IMAGE_FILES:
-        img2pva.put(fname)
-        print(f"image file name={img2pva.get()}")
-        img2pva.publish_image_as_pva()
-
-    dt = time.time() - t0
-    mean = dt / len(IMAGE_FILES)
-    print(f"average time per image: {mean*1_000:.4f}ms")
-
-    # leave server running for a bit longer
-    time.sleep(10)
-
-    img2pva.stop_pva_server()
-    print("demo over")
-
-
-if __name__ == "__main__":
-    # demo1()
-    demo2()
+img2pva = ImageFileToPvaSignal(
+    PV_CA_IMAGE_FILE_NAME, 
+    name="image_file_name", 
+    string=True,
+    pva_name=PV_PVA_IMAGE,
+)
