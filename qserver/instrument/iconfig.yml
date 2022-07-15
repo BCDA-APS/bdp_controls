@@ -32,7 +32,7 @@ PV_CA_PZT_Y: "bdpgp:gp:float2"
 PV_CA_RUN_ENGINE_SCAN_ID: "bdpapi:RunEngine_scan_id"
 PV_CA_XY_STAGE_X: "bdpgp:m9"
 PV_CA_XY_STAGE_Y: "bdpgp:m10"
-PV_PVA_IMAGE: "bluesky:image"
+PV_PVA_IMAGE: "pvapy:image"
 
 # paths
 #ADIOC_IMAGE_ROOT: /tmp
