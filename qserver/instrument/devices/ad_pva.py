@@ -40,7 +40,7 @@ class PvaDetector(DetectorBase):
 IOC = iconfig["IOC_PREFIX_ADPVA"]
 adpvadet = PvaDetector(IOC, name="adpvadet")
 
-# adpvadet.stage_sigs["array_callbacks"] = 1  # Enable
+adpvadet.cam.stage_sigs["acquire"] = 0
 adpvadet.cam.stage_sigs["array_callbacks"] = 1  # Enable
 adpvadet.cam.stage_sigs["array_counter"] = 0
 adpvadet.cam.stage_sigs["input_pv"] = iconfig["PV_PVA_IMAGE"]

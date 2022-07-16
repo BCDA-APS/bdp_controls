@@ -12,6 +12,7 @@ print(__file__)
 from .. import iconfig
 from .blueskyImageServer import BlueskyImageServer
 from apstools.utils import run_in_thread
+from bluesky import plan_stubs as bps
 from ophyd import EpicsSignal
 import datetime
 import logging
@@ -25,6 +26,7 @@ M6_GALLERY = pathlib.Path.home() / "voyager" / "BDP" / "M6-gallery"
 PV_CA_IMAGE_FILE_NAME = iconfig["PV_CA_IMAGE_FILE_NAME"]
 PV_PVA_IMAGE = iconfig["PV_PVA_IMAGE"]
 WAIT_BUSY_LOOP = 1.0 / 5_000  # at most, 5k frames per second
+SHORT_WAIT = 0.000_5
 
 
 def image_file_list(num=4, sort=True):
@@ -118,18 +120,10 @@ class ImageFileToPvaSignal(EpicsSignal):
         return self._busy
 
     def wait_server(self, earliest=0):
+        """Bluesky plan"""
         yield from bps.null()
         while (time.time() < earliest) or self.busy:
-            # print(f"waiting: {datetime.datetime.now()} {time.time()<earliest} {self.busy}")
             yield from bps.sleep(SHORT_WAIT)
-
-    # def wait_when_busy(self):
-    #     """Loop until this signal is not busy."""
-    #     if self.busy:
-    #         t0 = time.time()
-    #         while self.busy:
-    #             time.sleep(WAIT_BUSY_LOOP)
-    #         logger.debug(f"waited {1000 * (time.time() - t0):.3f} ms")
 
 
 img2pva = ImageFileToPvaSignal(
