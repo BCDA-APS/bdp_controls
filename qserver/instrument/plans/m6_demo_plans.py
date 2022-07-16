@@ -18,6 +18,12 @@ import datetime
 import time
 
 
+def set_next_deadline(deadline, interval):
+    while deadline <= time.time():  # until time is in the future
+        deadline += interval
+    return deadline
+
+
 def push_images(num_images=4, frame_rate=10, md={}):
 
     _md = dict(
@@ -27,8 +33,8 @@ def push_images(num_images=4, frame_rate=10, md={}):
         datetime=str(datetime.datetime.now()),
     )
     _md.update(md)
-    adpvadet.cam.stage_sigs["num_images"] = num_images
 
+    adpvadet.cam.stage_sigs["num_images"] = num_images
     frame_interval = 1.0 / frame_rate
 
     yield from bps.open_run(md=_md)
@@ -36,17 +42,16 @@ def push_images(num_images=4, frame_rate=10, md={}):
     adpvadet.stage()
     yield from bps.mv(adpvadet.cam.acquire, 1)
 
-    time_for_next_frame = time.time()
+    frame_deadline = time.time()
     for item in image_file_list(num_images):
-        yield from img2pva.wait_server(time_for_next_frame)
+        yield from img2pva.wait_server(frame_deadline)
         yield from bps.mv(img2pva, item)
         yield from img2pva.wait_server()
         yield from bps.create()
         yield from bps.read(adpvadet.cam.array_counter)
         yield from bps.save()
 
-        while time_for_next_frame <= time.time():  # until time is in the future
-            time_for_next_frame += frame_interval
+        frame_deadline = set_next_deadline(frame_deadline, frame_interval)
     yield from img2pva.wait_server()
 
     yield from bps.mv(adpvadet.cam.acquire, 0)
