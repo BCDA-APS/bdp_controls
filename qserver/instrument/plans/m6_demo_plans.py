@@ -51,6 +51,12 @@ def push_images(num_images=4, frame_rate=10, md={}):
 
         frame_deadline = time.time()
         for frame in tqdm.tqdm(gallery.image_file_list(num_images)):
+            if adpvadet.cam.acquire.get() not in (1, "Acquire"):
+                logger.info(
+                    "Stopping 'acquisition' early:"
+                    f" {adpvadet.cam1.acquire.pvname} stopped."
+                )
+                break
             yield from img2pva.wait_server(frame_deadline)
             # yield from bps.mv(img2pva, item)
             yield from publish_single_frame(frame)
