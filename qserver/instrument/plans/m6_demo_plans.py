@@ -27,11 +27,12 @@ def set_next_deadline(deadline, interval):
     return deadline
 
 
-def push_images(num_images=4, frame_rate=10, md={}):
+def push_images(num_images=4, frame_rate=10, run_time=300, md={}):
     _md = dict(
         purpose="push TIFF files to PVaccess PV",
         num_images=num_images,
         frame_rate=frame_rate,
+        run_time=run_time,
         datetime=str(datetime.datetime.now()),
     )
     _md.update(md)
@@ -49,25 +50,46 @@ def push_images(num_images=4, frame_rate=10, md={}):
     def inner_plan():
         yield from bps.mv(adpvadet.cam.acquire, 1)
 
-        frame_deadline = time.time()
-        for frame in tqdm.tqdm(gallery.image_file_list(num_images)):
-            if adpvadet.cam.acquire.get() not in (1, "Acquire"):
+        t0 = time.time()
+        frame_deadline = t0
+        run_deadline = t0 + max(0, run_time)
+
+        def has_runtime_expired():
+            result = time.time() >= run_deadline
+            if result:
+                logger.info("Run time time complete.")
+            return result
+
+        def detector_stopped():
+            result = adpvadet.cam.acquire.get() not in (1, "Acquire")
+            if result:
                 logger.info(
                     "Stopping 'acquisition' early:"
-                    f" {adpvadet.cam1.acquire.pvname} stopped."
+                    f" {adpvadet.cam.acquire.pvname} stopped."
                 )
-                break
-            yield from img2pva.wait_server(frame_deadline)
-            # yield from bps.mv(img2pva, item)
-            yield from publish_single_frame(frame)
-            yield from img2pva.wait_server()
-            yield from bps.create()
-            yield from bps.read(adpvadet.cam.array_counter)
-            yield from bps.read(adpvadet.cam.array_rate)
-            yield from bps.save()
+            return result
 
-            frame_deadline = set_next_deadline(frame_deadline, frame_interval)
+        progress_bar = tqdm.tqdm(desc=f"run time: {run_time} seconds.")
+        while True:
+            "Repeat until run time expires."
+            if has_runtime_expired() or detector_stopped():
+                break
+            for frame in gallery.image_file_list(num_images):
+                progress_bar.update()
+                if has_runtime_expired() or detector_stopped():
+                    break
+                yield from img2pva.wait_server(frame_deadline)
+                # yield from bps.mv(img2pva, item)
+                yield from publish_single_frame(frame)
+                yield from img2pva.wait_server()
+                yield from bps.create()
+                yield from bps.read(adpvadet.cam.array_counter)
+                yield from bps.read(adpvadet.cam.array_rate)
+                yield from bps.save()
+
+                frame_deadline = set_next_deadline(frame_deadline, frame_interval)
         yield from img2pva.wait_server()
+        progress_bar.close()
 
         yield from bps.mv(adpvadet.cam.acquire, 0)
 
