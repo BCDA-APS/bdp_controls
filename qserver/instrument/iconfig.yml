@@ -52,7 +52,7 @@ USE_PROGRESS_BAR: false
 # ----------------------------------
 
 # default timeouts (seconds)
-PV_TIMEOUT: &TIMEOUT 60
+PV_TIMEOUT: &TIMEOUT 6.789
 PV_WRITE_TIMEOUT: *TIMEOUT
 PV_CONNECTION_TIMEOUT: *TIMEOUT
 
