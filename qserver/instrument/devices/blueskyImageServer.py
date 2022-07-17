@@ -58,6 +58,11 @@ class BlueskyImageServer(pva.PvaServer):
     def updateImage(self, inputFile, extraFieldsValueDict={}):
         logger.info(f"Reading input file: {inputFile}")
         data = plt.imread(inputFile)
+        self.updateFrame(data, extraFieldsValueDict=extraFieldsValueDict)
+
+    def updateFrame(self, image_frame, extraFieldsValueDict={}):
+        logger.info(f"image frame shape: {image_frame.shape}")
+        data = image_frame
         rows, cols = data.shape
         size = rows * cols * data.itemsize
 
