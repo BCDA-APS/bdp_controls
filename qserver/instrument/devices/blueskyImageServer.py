@@ -59,6 +59,7 @@ class BlueskyImageServer(pva.PvaServer):
         logger.info(f"Reading input file: {inputFile}")
         data = plt.imread(inputFile)
         self.updateFrame(data, extraFieldsValueDict=extraFieldsValueDict)
+        logger.info(f"Published image {self.frameId} from: {inputFile}")
 
     def updateFrame(self, image_frame, extraFieldsValueDict={}):
         logger.info(f"image frame shape: {image_frame.shape}")
@@ -93,7 +94,6 @@ class BlueskyImageServer(pva.PvaServer):
         if extraFieldsValueDict:
             frame.set(extraFieldsValueDict)
         self.update(frame)
-        logger.info(f"Published image {self.frameId} from: {inputFile}")
 
 
 def main():

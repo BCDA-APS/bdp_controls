@@ -11,11 +11,14 @@ logger.info(__file__)
 print(__file__)
 
 from ..devices import adpvadet
+from ..devices import gallery
 from ..devices import img2pva
 from ..devices import image_file_list
 from bluesky import plan_stubs as bps
+from bluesky import preprocessors as bpp
 import datetime
 import time
+import tqdm
 
 
 def set_next_deadline(deadline, interval):
@@ -25,7 +28,6 @@ def set_next_deadline(deadline, interval):
 
 
 def push_images(num_images=4, frame_rate=10, md={}):
-
     _md = dict(
         purpose="push TIFF files to PVaccess PV",
         num_images=num_images,
@@ -37,24 +39,30 @@ def push_images(num_images=4, frame_rate=10, md={}):
     adpvadet.cam.stage_sigs["num_images"] = num_images
     frame_interval = 1.0 / frame_rate
 
-    yield from bps.open_run(md=_md)
+    def publish_single_frame(frame):
+        yield from bps.null()
+        # next call is not a bluesky plan
+        img2pva.publish_frame_as_pva(frame)  # runs in thread
 
-    adpvadet.stage()
-    yield from bps.mv(adpvadet.cam.acquire, 1)
+    @bpp.stage_decorator([adpvadet])
+    @bpp.run_decorator(md=_md)
+    def inner_plan():
+        yield from bps.mv(adpvadet.cam.acquire, 1)
 
-    frame_deadline = time.time()
-    for item in image_file_list(num_images):
-        yield from img2pva.wait_server(frame_deadline)
-        yield from bps.mv(img2pva, item)
+        frame_deadline = time.time()
+        for frame in tqdm.tqdm(gallery.image_file_list(num_images)):
+            yield from img2pva.wait_server(frame_deadline)
+            # yield from bps.mv(img2pva, item)
+            yield from publish_single_frame(frame)
+            yield from img2pva.wait_server()
+            yield from bps.create()
+            yield from bps.read(adpvadet.cam.array_counter)
+            yield from bps.read(adpvadet.cam.array_rate)
+            yield from bps.save()
+
+            frame_deadline = set_next_deadline(frame_deadline, frame_interval)
         yield from img2pva.wait_server()
-        yield from bps.create()
-        yield from bps.read(adpvadet.cam.array_counter)
-        yield from bps.save()
 
-        frame_deadline = set_next_deadline(frame_deadline, frame_interval)
-    yield from img2pva.wait_server()
+        yield from bps.mv(adpvadet.cam.acquire, 0)
 
-    yield from bps.mv(adpvadet.cam.acquire, 0)
-    adpvadet.unstage()
-
-    yield from bps.close_run()
+    return (yield from inner_plan())

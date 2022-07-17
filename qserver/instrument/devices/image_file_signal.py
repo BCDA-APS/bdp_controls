@@ -3,6 +3,7 @@ EpicsSignal: receives file name, sends image via PVAccess
 """
 
 __all__ = """
+    gallery
     img2pva
     image_file_list
 """.split()
@@ -14,8 +15,10 @@ from .blueskyImageServer import BlueskyImageServer
 from apstools.utils import run_in_thread
 from bluesky import plan_stubs as bps
 from ophyd import EpicsSignal
+from ophyd import Signal
 import datetime
 import logging
+import numpy
 import pathlib
 import random
 import time
@@ -50,6 +53,31 @@ def image_file_list(num=4, sort=True):
     # fmt: on
 
 
+class ImageGallery(Signal):
+    AD_SIM_INPUT_FILE = "/gdata/bdp/henke/fly001_uint16.npy"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.gallery = numpy.load(self.AD_SIM_INPUT_FILE)
+    
+    def frame(self, num):
+        return self.gallery[num]
+
+    def image_file_list(self, num=4, sort=True):
+        """Return randomized list of 'num' image file names, sort is optional."""
+        # fmt: off
+        total_images = len(self.gallery)
+        requested_number = min(num, total_images)
+        indices = [
+            random.randint(0, total_images-1) for _ in range(requested_number)
+        ]
+        if sort:
+            indices = sorted(indices)
+        subset = [self.frame(i) for i in indices]
+        return subset
+        # fmt: on
+
+
 class ImageFileToPvaSignal(EpicsSignal):
     """
     EpicsSignal: receives file name, sends image via PVAccess
@@ -79,6 +107,21 @@ class ImageFileToPvaSignal(EpicsSignal):
         logger.debug(f"self._busy: {self._busy}")
 
         self.publish_image_as_pva(kwargs["value"])
+
+    @run_in_thread
+    def publish_frame_as_pva(self, image_frame):
+        """Take image frame, publish as PVAccess."""
+        if self.pva_server is None:
+            raise RuntimeError("PVA server is not running.")
+        if not self.connected:
+            logger.debug("Not connected.  Will not post image to PVA.")
+            return
+
+        self.wait_server()
+
+        logger.debug(f"pushing {image_frame.shape} image to PVA {self.pva_name}")
+        self.pva_server.updateFrame(image_frame)
+        self._busy = False
 
     @run_in_thread
     def publish_image_as_pva(self, fname=None):
@@ -126,6 +169,7 @@ class ImageFileToPvaSignal(EpicsSignal):
             yield from bps.sleep(SHORT_WAIT)
 
 
+gallery = ImageGallery(name="gallery")
 img2pva = ImageFileToPvaSignal(
     PV_CA_IMAGE_FILE_NAME, 
     name="image_file_name", 
