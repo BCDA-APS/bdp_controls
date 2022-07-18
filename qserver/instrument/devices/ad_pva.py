@@ -14,12 +14,14 @@ print(__file__)
 
 
 from .. import iconfig
+from apstools.devices import AD_EpicsFileNameTIFFPlugin
+from ophyd import EpicsSignalRO
+from ophyd import EpicsSignalWithRBV
 from ophyd.areadetector import ADComponent
 from ophyd.areadetector import CamBase
 from ophyd.areadetector import DetectorBase
 from ophyd.areadetector.plugins import PvaPlugin_V34 as PvaPlugin
-from ophyd import EpicsSignalWithRBV
-from ophyd import EpicsSignalRO
+# from ophyd.areadetector.plugins import TIFFPlugin_V34 as TIFFPlugin
 
 
 class PvaDetectorCam(CamBase):
@@ -35,6 +37,11 @@ class PvaDetector(DetectorBase):
     """Pull image frames from PVA source, publish via PVA plugin"""
     cam = ADComponent(PvaDetectorCam, "cam1:")
     pva1 = ADComponent(PvaPlugin, "Pva1:")
+    tiff1 = ADComponent(
+        AD_EpicsFileNameTIFFPlugin,  # EPICS-controlled file names
+        "TIFF1:",
+        write_path_template=iconfig["BDP_DATA_DIR"],
+    )
 
 
 IOC = iconfig["IOC_PREFIX_ADPVA"]
@@ -44,17 +51,17 @@ adpvadet.cam.stage_sigs["acquire"] = 0
 adpvadet.cam.stage_sigs["array_callbacks"] = 1  # Enable
 adpvadet.cam.stage_sigs["array_counter"] = 0
 adpvadet.cam.stage_sigs["input_pv"] = iconfig["PV_PVA_IMAGE"]
-adpvadet.pva1.stage_sigs["enable"] = "Enable"
-adpvadet.read_attrs.append("pva1")
 
-"""
-def acquire(n=10):
-    import time
-    adpvadet.stage()
-    adpvadet.cam.acquire.put(1)
-    for item in image_file_list(n):
-        img2pva.put(item)
-        time.sleep(0.05)  # wait 50 ms (!) for PVA to push the image
-    adpvadet.cam.acquire.put(0)
-    adpvadet.unstage()
-"""
+adpvadet.pva1.stage_sigs["enable"] = "Enable"
+
+adpvadet.tiff1.stage_sigs["enable"] = "Enable"
+adpvadet.tiff1.stage_sigs["auto_increment"] = "Yes"
+adpvadet.tiff1.stage_sigs["auto_save"] = "Yes"
+adpvadet.tiff1.stage_sigs["file_number"] = 1
+adpvadet.tiff1.stage_sigs["queue_size"] = 500
+adpvadet.tiff1.stage_sigs["lazy_open"] = 1
+# adpvadet.tiff1.stage_sigs["write_file"] = "Write"
+adpvadet.tiff1.stage_sigs["capture"] = adpvadet.tiff1.stage_sigs.pop("capture")
+
+adpvadet.read_attrs.append("pva1")
+adpvadet.read_attrs.append("tiff1")

@@ -35,8 +35,9 @@ PV_CA_XY_STAGE_Y: "bdpgp:m10"
 PV_PVA_IMAGE: "pvapy:image"
 
 # paths
-#ADIOC_IMAGE_ROOT: /tmp
-#BLUESKY_IMAGE_ROOT: /tmp/docker_ioc/iocbdpad/tmp
+BDP_DATA_DIR: /gdata/bdp/BDP/bdp-test-05
+BDP_DATA_FILE_NAME: bdp
+BDP_DATA_FILE_TEMPLATE: "%s%s_%3.6d.tif"
 ADIOC_IMAGE_ROOT: &FILE_PATH /clhome/BDP/voyager
 BLUESKY_IMAGE_ROOT: *FILE_PATH
 AD_IMAGE_SUBDIR: "adsimdet/%Y/%m/%d/"

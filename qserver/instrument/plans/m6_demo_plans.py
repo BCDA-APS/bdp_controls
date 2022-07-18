@@ -10,10 +10,13 @@ logger = logging.getLogger(__name__)
 logger.info(__file__)
 print(__file__)
 
+from .. import iconfig
 from ..devices import adpvadet
 from ..devices import gallery
-from ..devices import img2pva
 from ..devices import image_file_list
+from ..devices import img2pva
+# from apstools.devices import AD_plugin_primed
+# from apstools.devices import AD_prime_plugin2
 from bluesky import plan_stubs as bps
 from bluesky import preprocessors as bpp
 import datetime
@@ -37,28 +40,32 @@ def push_images(num_images=4, frame_rate=10, run_time=300, md={}):
     )
     _md.update(md)
 
+    # Problems priming, cannot force a new cam image.  Set Capture directly.
+    # if not AD_plugin_primed(adpvadet.tiff1):
+    #     print("Priming 'adpvadet.tiff1' plugin.")
+    #     AD_prime_plugin2(adpvadet.tiff1)
+    adpvadet.tiff1.stage_sigs.pop("capture")
+    print(f"adpvadet.tiff1.stage_sigs={adpvadet.tiff1.stage_sigs}")
+
     adpvadet.cam.stage_sigs["num_images"] = num_images
     frame_interval = 1.0 / frame_rate
 
-    def publish_single_frame(frame):
-        yield from bps.null()
-        # next call is not a bluesky plan
-        img2pva.publish_frame_as_pva(frame)  # runs in thread
+    # setup custom file names in TIFF plugin
+    yield from bps.mv(
+        adpvadet.tiff1.file_name, iconfig["BDP_DATA_FILE_NAME"],
+        adpvadet.tiff1.file_path, iconfig["BDP_DATA_DIR"],
+        adpvadet.tiff1.file_template, iconfig["BDP_DATA_FILE_TEMPLATE"],
+    )
 
     @bpp.stage_decorator([adpvadet])
     @bpp.run_decorator(md=_md)
     def inner_plan():
+        yield from bps.mv(adpvadet.tiff1.capture, 1)
         yield from bps.mv(adpvadet.cam.acquire, 1)
 
         t0 = time.time()
         frame_deadline = t0
         run_deadline = t0 + max(0, run_time)
-
-        def has_runtime_expired():
-            result = time.time() >= run_deadline
-            if result:
-                logger.info("Run time time complete.")
-            return result
 
         def detector_stopped():
             result = adpvadet.cam.acquire.get() not in (1, "Acquire")
@@ -68,6 +75,17 @@ def push_images(num_images=4, frame_rate=10, run_time=300, md={}):
                     f" {adpvadet.cam.acquire.pvname} stopped."
                 )
             return result
+
+        def has_runtime_expired():
+            result = time.time() >= run_deadline
+            if result:
+                logger.info("Run time time complete.")
+            return result
+
+        def publish_single_frame(frame):
+            yield from bps.null()
+            # next call is not a bluesky plan
+            img2pva.publish_frame_as_pva(frame)  # runs in thread
 
         progress_bar = tqdm.tqdm(desc=f"run time: {run_time} seconds.")
         while True:
@@ -91,6 +109,7 @@ def push_images(num_images=4, frame_rate=10, run_time=300, md={}):
         yield from img2pva.wait_server()
         progress_bar.close()
 
+        yield from bps.mv(adpvadet.tiff1.capture, 0)
         yield from bps.mv(adpvadet.cam.acquire, 0)
 
     return (yield from inner_plan())
