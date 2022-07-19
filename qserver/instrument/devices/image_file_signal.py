@@ -55,13 +55,24 @@ def image_file_list(num=4, sort=True):
 
 class ImageGallery(Signal):
     AD_SIM_INPUT_FILE = "/gdata/bdp/henke/fly001_uint16.npy"
+    POSITION_INPUT_FILE = "/gdata/bdp/henke/fly001_pos.csv"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.gallery = numpy.load(self.AD_SIM_INPUT_FILE)
+        self.positions = numpy.loadtxt(
+            self.POSITION_INPUT_FILE, delimiter=",", dtype=str
+        )
+        # truncate
+        shortest = min(len(self.gallery), len(self.positions))
+        self.gallery = self.gallery[:shortest]
+        self.positions = self.positions[:shortest]
     
     def frame(self, num):
         return self.gallery[num]
+    
+    def position(self, num):
+        return self.positions[num]
 
     def image_file_list(self, num=4, sort=True):
         """Return randomized list of 'num' image file names, sort is optional."""
