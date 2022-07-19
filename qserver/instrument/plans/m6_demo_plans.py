@@ -44,7 +44,8 @@ def push_images(num_images=4, frame_rate=10, run_time=300, md={}):
     # if not AD_plugin_primed(adpvadet.tiff1):
     #     print("Priming 'adpvadet.tiff1' plugin.")
     #     AD_prime_plugin2(adpvadet.tiff1)
-    adpvadet.tiff1.stage_sigs.pop("capture")
+    if "capture" in adpvadet.tiff1.stage_sigs:
+        adpvadet.tiff1.stage_sigs.pop("capture")
     print(f"adpvadet.tiff1.stage_sigs={adpvadet.tiff1.stage_sigs}")
 
     adpvadet.cam.stage_sigs["num_images"] = num_images

@@ -10,6 +10,18 @@ print(__file__)
 
 # most of these imports *provision* the RE environment with devices and plans
 from . import iconfig
+
+import ophyd
+ophyd.set_cl("caproto")
+import os
+print(f"environment EPICS_CA_ADDR_LIST={os.environ.get('EPICS_CA_ADDR_LIST')}")
+
+# # DIAGNOSTIC use only
+# for item in "ophyd ophyd.control_layer ophyd.event_dispatcher ophyd.objects".split():
+#     logging.getLogger(f"{item}").setLevel(logging.DEBUG)
+
+logging.getLogger("caproto").setLevel(logging.ERROR)  # silence non-errors from caproto
+
 from .epics_signal_config import scan_id_epics
 from .qserver_framework import *
 

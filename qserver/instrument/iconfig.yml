@@ -34,8 +34,8 @@ PV_CA_XY_STAGE_X: "bdpgp:m9"
 PV_CA_XY_STAGE_Y: "bdpgp:m10"
 PV_PVA_IMAGE: "pvapy:image"
 
-# paths
-BDP_DATA_DIR: /gdata/bdp/BDP/bdp-test-05
+# paths & configuration
+BDP_DATA_DIR: /gdata/bdp/BDP/bdp-test-02
 BDP_DATA_FILE_NAME: bdp
 BDP_DATA_FILE_TEMPLATE: "%s%s_%3.6d.tif"
 ADIOC_IMAGE_ROOT: &FILE_PATH /clhome/BDP/voyager
@@ -53,7 +53,7 @@ USE_PROGRESS_BAR: false
 # ----------------------------------
 
 # default timeouts (seconds)
-PV_TIMEOUT: &TIMEOUT 6.789
+PV_TIMEOUT: &TIMEOUT 9.87654
 PV_WRITE_TIMEOUT: *TIMEOUT
 PV_CONNECTION_TIMEOUT: *TIMEOUT
 
