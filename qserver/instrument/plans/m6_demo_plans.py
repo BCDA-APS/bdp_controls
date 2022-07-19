@@ -48,7 +48,8 @@ def push_images(num_images=4, frame_rate=10, run_time=300, md={}):
         adpvadet.tiff1.stage_sigs.pop("capture")
     print(f"adpvadet.tiff1.stage_sigs={adpvadet.tiff1.stage_sigs}")
 
-    adpvadet.cam.stage_sigs["num_images"] = num_images
+    adpvadet.cam.stage_sigs["num_images"] = 1_000_000  # num_images
+    adpvadet.tiff1.stage_sigs["num_capture"] = 1_000_000  # num_images
     frame_interval = 1.0 / frame_rate
 
     # setup custom file names in TIFF plugin
