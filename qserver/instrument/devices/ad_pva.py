@@ -58,10 +58,12 @@ adpvadet.tiff1.stage_sigs["enable"] = "Enable"
 adpvadet.tiff1.stage_sigs["auto_increment"] = "Yes"
 adpvadet.tiff1.stage_sigs["auto_save"] = "Yes"
 adpvadet.tiff1.stage_sigs["file_number"] = 0
+adpvadet.tiff1.stage_sigs["file_write_mode"] = "Stream"
 adpvadet.tiff1.stage_sigs["queue_size"] = 500
 adpvadet.tiff1.stage_sigs["lazy_open"] = 1
 # adpvadet.tiff1.stage_sigs["write_file"] = "Write"
-adpvadet.tiff1.stage_sigs["capture"] = adpvadet.tiff1.stage_sigs.pop("capture")
+if "capture" in adpvadet.tiff1.stage_sigs:
+    adpvadet.tiff1.stage_sigs.pop("capture")
 
 adpvadet.read_attrs.append("pva1")
 adpvadet.read_attrs.append("tiff1")
