@@ -105,6 +105,8 @@ def push_images(num_images=4, frame_rate=10, run_time=300, md={}):
                 yield from bps.create()
                 yield from bps.read(adpvadet.cam.array_counter)
                 yield from bps.read(adpvadet.cam.array_rate)
+                yield from bps.read(adpvadet.pva1.execution_time)
+                yield from bps.read(adpvadet.tiff1.execution_time)
                 yield from bps.save()
 
                 frame_deadline = set_next_deadline(frame_deadline, frame_interval)

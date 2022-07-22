@@ -33,12 +33,20 @@ class PvaDetectorCam(CamBase):
     overrun_counter = ADComponent(EpicsSignalWithRBV, "OverrunCounter")
 
 
+class MyPvaPlugin(PvaPlugin):
+    execution_time = ADComponent(EpicsSignalRO, "ExecutionTime_RBV")
+
+
+class MyTiffPlugin(AD_EpicsFileNameTIFFPlugin):
+    execution_time = ADComponent(EpicsSignalRO, "ExecutionTime_RBV")
+
+
 class PvaDetector(DetectorBase):
     """Pull image frames from PVA source, publish via PVA plugin"""
     cam = ADComponent(PvaDetectorCam, "cam1:")
-    pva1 = ADComponent(PvaPlugin, "Pva1:")
+    pva1 = ADComponent(MyPvaPlugin, "Pva1:")
     tiff1 = ADComponent(
-        AD_EpicsFileNameTIFFPlugin,  # EPICS-controlled file names
+        MyTiffPlugin,  # EPICS-controlled file names
         "TIFF1:",
         write_path_template=iconfig["BDP_DATA_DIR"],
     )
