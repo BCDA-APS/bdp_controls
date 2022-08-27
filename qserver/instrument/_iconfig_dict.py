@@ -31,3 +31,8 @@ else:
     raise FileNotFoundError(
         f"Could not find instrument configuration file: {CONFIG_FILE}"
     )
+
+# os environment variable
+iconfig["BDP_DEMO"] = pathlib.os.environ.get('BDP_DEMO')
+if iconfig["BDP_DEMO"] == "M4":
+    iconfig["RUNENGINE_METADATA"]["milestone"] = f"BDP M4 demo"

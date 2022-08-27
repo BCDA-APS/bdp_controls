@@ -54,11 +54,13 @@ def update_cross_reference_file(run_uid, image_name):
                 str(path.absolute())
             )
             f.write(
-                f"# file: {path}\n"
+                f"# file: {str(path.absolute())}\n"
                 f"# created: {datetime.datetime.now()}\n"
                 "# purpose: cross-reference bluesky run uid and HDF5 file name\n"
                 "\n"
             )
+        print(f"DIAGNOSTIC: path='{str(path.absolute())}'")
+        print(f"DIAGNOSTIC: run_uid='{run_uid}' image_name.stem='{image_name.stem}'")
         f.write(
             f"{run_uid}: {image_name.stem}\n"
             f"{image_name.stem}: {run_uid}\n"
@@ -137,6 +139,7 @@ def take_image(atime, aperiod=None, nframes=1, compression="None", md=None):
         frames_per_image = nframes,
         HDF5_compression = compression,
         shutter = shutter.state,
+        bdp_demo = iconfig.get("BDP_DEMO", "undefined"),
     )
     _md.update(md or {})
 
