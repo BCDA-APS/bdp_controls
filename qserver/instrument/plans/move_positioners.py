@@ -5,6 +5,7 @@ Plans to move the positioners
 __all__ = """
     move_coarse_positioner
     move_fine_positioner
+    set_fine_positioner_velocities
 """.split()
 
 import logging
@@ -43,3 +44,13 @@ def _move_named_positioner(xy_stage, x, y):
 
     # MUST yield something
     yield from bps.null()
+
+
+def set_fine_positioner_velocities(vx, vy):
+    """Set velocities on the fine stage positioners."""
+    if hasattr(samplexy.fine.x, "velocity") and hasattr(samplexy.fine.y, "velocity"):
+        yield from bps.mv(
+            samplexy.fine.x.velocity, vx,
+            samplexy.fine.y.velocity, vy,
+        )
+    # else quietly ignore
