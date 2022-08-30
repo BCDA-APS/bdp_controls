@@ -26,6 +26,7 @@ print(__file__)
 
 from .. import iconfig
 from apstools.devices import PVPositionerSoftDoneWithStop
+from apstools.synApps import SwaitRecord
 from apstools.utils import run_in_thread
 from ophyd import Component
 from ophyd import Device
@@ -136,30 +137,99 @@ class SimulatedConstantVelocityPositioner(PVPositionerSoftDoneWithStop):
         super().stop(success=success)
 
 
-class SimulatedPiezoXyStageWithReadback(Device):
-    """
-    Simulated Piezo X,Y Stage with Velocity-Controlled Readbacks.
-
-        fastxy = SimulatedPiezoXyStageWithReadback("", name="fastxy")
-
-    """
-    x = Component(
-        SimulatedConstantVelocityPositioner, 
-        "",
-        readback_pv=iconfig["PV_CA_FAST_UPDATE_X_RBV"],
-        setpoint_pv=iconfig["PV_CA_FAST_UPDATE_X_VAL"],
-        tolerance=0.0002,
-        kind="hinted",
-    )
-    y = Component(
-        SimulatedConstantVelocityPositioner, 
-        "",
-        readback_pv=iconfig["PV_CA_FAST_UPDATE_Y_RBV"],
-        setpoint_pv=iconfig["PV_CA_FAST_UPDATE_Y_VAL"],
-        tolerance=0.0002,
-        kind="hinted",
+class SwaitPositioner(PVPositionerSoftDoneWithStop):
+    # the readback must be writable in this simulator
+    readback = FormattedComponent(
+        EpicsSignal, "{prefix}{_readback_pv}", kind="hinted", auto_monitor=True
     )
 
-    @property
-    def inposition(self):
-        return self.x.inposition and self.y.inposition
+    def __init__(self, *args, swait=None, **kwargs):
+        if not isinstance(swait, SwaitRecord):
+            raise KeyError(f"'swait' must be instance of SwaitRecord")
+        self.swait_configure(swait, kwargs["setpoint_pv"], kwargs["readback_pv"])
+        super().__init__(*args, **kwargs)
+
+    def swait_configure(self, swait, sp_pv, rb_pv):
+        print(f"Resetting {swait.name}")
+        swait.reset()
+        STEP_FACTOR = 0.3  # 1.0 is one-step
+
+        swait.description.put("SwaitPositioner")
+        swait.precision.put("5")
+        swait.channels.A.input_pv.put(sp_pv)
+        swait.channels.B.input_pv.put(
+            swait.calculated_value.pvname
+        )
+        swait.channels.C.input_value.put(STEP_FACTOR)
+        swait.output_execute_option.put("Every Time")
+        swait.output_link_pv.put(rb_pv)
+
+        print(f"Setting calculation: {swait.name}")
+
+        swait.calculation.put("B+C*(A-B)")
+        swait.scanning_rate.put(".1 second")
+        print(f"Done configuring {swait.name}")
+
+
+if iconfig.get("BDP_DEMO") == "M4":
+    swait_x = SwaitRecord(iconfig["PV_CA_FINE_X_SWAIT"], name="swait_x")
+    swait_y = SwaitRecord(iconfig["PV_CA_FINE_Y_SWAIT"], name="swait_y")
+
+    class SimulatedPiezoXyStageWithReadback(Device):
+        """
+        Simulated Piezo X,Y Stage with Velocity-Controlled Readbacks.
+
+            fastxy = SimulatedPiezoXyStageWithReadback("", name="fastxy")
+
+        """
+        x = Component(
+            SwaitPositioner,
+            "",
+            readback_pv=iconfig["PV_CA_FAST_UPDATE_X_RBV"],
+            setpoint_pv=iconfig["PV_CA_FAST_UPDATE_X_VAL"],
+            swait=swait_x,
+            tolerance=0.0002,
+            kind="hinted",
+        )
+        y = Component(
+            SwaitPositioner,
+            "",
+            readback_pv=iconfig["PV_CA_FAST_UPDATE_Y_RBV"],
+            setpoint_pv=iconfig["PV_CA_FAST_UPDATE_Y_VAL"],
+            swait=swait_y,
+            tolerance=0.0002,
+            kind="hinted",
+        )
+
+        @property
+        def inposition(self):
+            return self.x.inposition and self.y.inposition
+
+else:
+    class SimulatedPiezoXyStageWithReadback(Device):
+        """
+        Simulated Piezo X,Y Stage with Velocity-Controlled Readbacks.
+
+            fastxy = SimulatedPiezoXyStageWithReadback("", name="fastxy")
+
+        """
+        x = Component(
+            SimulatedConstantVelocityPositioner,
+            "",
+            readback_pv=iconfig["PV_CA_FAST_UPDATE_X_RBV"],
+            setpoint_pv=iconfig["PV_CA_FAST_UPDATE_X_VAL"],
+            tolerance=0.0002,
+            kind="hinted",
+        )
+        y = Component(
+            SimulatedConstantVelocityPositioner,
+            "",
+            readback_pv=iconfig["PV_CA_FAST_UPDATE_Y_RBV"],
+            setpoint_pv=iconfig["PV_CA_FAST_UPDATE_Y_VAL"],
+            tolerance=0.0002,
+            kind="hinted",
+        )
+
+        @property
+        def inposition(self):
+            return self.x.inposition and self.y.inposition
