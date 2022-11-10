@@ -1,4 +1,3 @@
-
 """
 Provide information from the configuration.yml file.
 
@@ -11,16 +10,17 @@ Example YAML configuration file::
     catalog: bdp2022
 """
 
-__all__ = ["iconfig", ]
+__all__ = [
+    "iconfig",
+]
 
 import logging
-logger = logging.getLogger(__name__)
-
-logger.info(__file__)
-print(__file__)
-
 import pathlib
 import yaml
+
+logger = logging.getLogger(__name__)
+logger.info(__file__)
+print(__file__)
 
 
 CONFIG_FILE = pathlib.Path(__file__).absolute().parent / "iconfig.yml"
@@ -33,6 +33,5 @@ else:
     )
 
 # os environment variable
-iconfig["BDP_DEMO"] = pathlib.os.environ.get('BDP_DEMO')
-if iconfig["BDP_DEMO"] == "M4":
-    iconfig["RUNENGINE_METADATA"]["milestone"] = f"BDP M4 demo"
+iconfig["BDP_DEMO"] = pathlib.os.environ.get("BDP_DEMO", "")
+iconfig["RUNENGINE_METADATA"]["milestone"] = f"BDP {iconfig['BDP_DEMO']} demo"
