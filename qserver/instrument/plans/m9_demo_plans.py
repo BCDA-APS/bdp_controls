@@ -20,7 +20,7 @@ from bluesky import plan_stubs as bps
 import datetime
 
 
-def m9_push_images(num_images=10, frame_rate=1_000, md={}):
+def m9_push_images(num_images=12_000, frame_rate=1_000, md={}):
     _md = dict(
         purpose="publish image frames via PVaccess",
         num_images=num_images,
