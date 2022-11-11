@@ -29,12 +29,16 @@ PV_CA_FINE_Y_SWAIT: "bdpgp:userCalc8"
 PV_CA_HDF5_FILE_NAME: "bdpapi:ImageFileName"
 PV_CA_IMAGE_FILE_NAME: "bdpapi:ImageFileName"
 PV_CA_INCIDENT_BEAM_SIMULATOR_CALC: "bdpgp:userCalc2"
+PV_CA_M9_FRAME_RATE: "bdpgp:gp:float3"
+PV_CA_M9_NUM_IMAGES: "bdpgp:gp:int3"
+PV_CA_M9_RECONSTRUCT: "bdpgp:gp:bit3"
 PV_CA_PZT_X: "bdpgp:gp:float1"
 PV_CA_PZT_Y: "bdpgp:gp:float2"
 PV_CA_RUN_ENGINE_SCAN_ID: "bdpapi:RunEngine_scan_id"
 PV_CA_XY_STAGE_X: "bdpgp:m9"
 PV_CA_XY_STAGE_Y: "bdpgp:m10"
 PV_PVA_IMAGE: "pvapy:image"
+PV_PVA_M9_IMAGE: "bluesky:image"
 
 # paths & configuration
 BDP_DATA_DIR: /gdata/bdp/BDP/bdp-test-02

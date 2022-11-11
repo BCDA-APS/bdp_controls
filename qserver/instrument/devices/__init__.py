@@ -20,6 +20,8 @@ from .simulated_shutter import *
 if iconfig.get("BDP_DEMO") == "M4":
     # M4 demo
     from .ad_sim import *
+elif iconfig.get("BDP_DEMO") == "M9":
+    from .m9_devices import m9_flyer
 else:
     # M6 demo
     from .image_file_signal import *

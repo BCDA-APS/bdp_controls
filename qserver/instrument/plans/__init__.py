@@ -14,6 +14,8 @@ if iconfig.get("BDP_DEMO") == "M4":
     from .print_information import *
     from .shutter_controls import *
     from .trajectories import *
+elif iconfig.get("BDP_DEMO") == "M9":
+    from .m9_demo_plans import m9_push_images
 else:
     from .m6_demo_plans import *
 
