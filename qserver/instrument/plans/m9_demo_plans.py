@@ -20,7 +20,7 @@ from bluesky import plan_stubs as bps
 import datetime
 
 
-def m9_push_images(num_images=12_000, frame_rate=1_000, md={}):
+def m9_push_images(num_images=12_000, frame_rate=1_000, position_chunk_size=100, md={}):
     _md = dict(
         purpose="publish image frames via PVaccess",
         num_images=num_images,
@@ -32,5 +32,6 @@ def m9_push_images(num_images=12_000, frame_rate=1_000, md={}):
     yield from bps.mv(
         m9_flyer.frame_rate, frame_rate,
         m9_flyer.num_images, num_images,
+        m9_flyer.position_chunk_size, position_chunk_size,
     )
     yield from bp.fly([m9_flyer], md=_md)
