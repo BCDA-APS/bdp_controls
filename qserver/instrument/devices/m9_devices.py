@@ -27,7 +27,7 @@ import pvaccess as pva
 import time
 
 
-DATA_PATH = pathlib.Path().home() / "voyager" / "henke"
+DATA_PATH = pathlib.Path("/gdata/bdp") / "henke"
 IMAGES_FILE = DATA_PATH / "fly001_uint16.npy"
 POSITIONS_FILE = DATA_PATH / "fly001_pos.csv"
 CONFIG_FILE = DATA_PATH / "ptychodus.ini"
