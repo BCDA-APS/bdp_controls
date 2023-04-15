@@ -92,8 +92,8 @@ import time
 import pvaccess
 import pyRestTable
 
-PROTOCOL = None
-PVNAME = None
+PROTOCOL = None  # set below by command-line options or debug setup
+PVNAME = None  # set below by command-line options or debug setup
 
 
 def dictionary_to_table(o):
@@ -230,8 +230,8 @@ if __name__ == "__main__":
     if DEBUG:
         PVNAME = "ad:Pva1:Image"
         PROTOCOL = "PVA"
-        PVNAME = "gp:UPTIME"
-        PROTOCOL = "CA"
+        # PVNAME = "gp:UPTIME"
+        # PROTOCOL = "CA"
         once(PVNAME, PROTOCOL)  # for development and source-code debugging
     else:
         cli = get_command_line_options()
