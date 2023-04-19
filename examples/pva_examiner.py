@@ -125,10 +125,10 @@ def pva_to_table(pv_object, clip=60):
 
 def pva_to_image(pv_object):
     """Return the image from a PVA object.  Or ``None``."""
-    try:
+    if "dimension" in pv_object:
         shape = [axis["size"] for axis in pv_object["dimension"]]
         image = pv_object["value"][0]["ubyteValue"].reshape(*shape)
-    except KeyError:
+    else:
         image = None
     return image
 
@@ -149,12 +149,14 @@ def get_pva_ndattributes(pv_object):
 def monitor(pv_object):
     """Receive PVA/CA monitor events."""
     # sdict = pv_object.getStructureDict()
-    if PROTOCOL == "PVA":
-        timestamp = pv_object["dataTimeStamp"]["secondsPastEpoch"]
-        timestamp += pv_object["dataTimeStamp"]["nanoseconds"] * 1e-9
-        dt = datetime.datetime.fromtimestamp(timestamp)
-    else:
-        dt = datetime.datetime.now()
+    dt = datetime.datetime.now()
+    for key in "dataTimeStamp timeStamp".split():
+        if key in pv_object:
+            # "PVA"
+            timestamp = pv_object[key]["secondsPastEpoch"]
+            timestamp += pv_object[key]["nanoseconds"] * 1e-9
+            dt = datetime.datetime.fromtimestamp(timestamp)
+            break
     print(f"{PROTOCOL} monitor event: '{PVNAME}' at {dt}")
 
     if PROTOCOL == "PVA":
