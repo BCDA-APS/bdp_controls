@@ -22,16 +22,21 @@ DEFAULT_CHANNEL = "PVA:TEST"
 
 
 def new_PvObject():
-    """Create a new PVA object."""
+    """
+    Create a new PVA object.
+
+    :see: https://epics.anl.gov/extensions/pvaPy/production/pvaccess.html
+    """
     return pva.PvObject(
-        # define the data types of this PVA object
+        # define the data types of _this_ PVA object
         dict(
             i=pva.INT,
             f=pva.FLOAT,
             da=[pva.DOUBLE],
-            ta=[pva.DOUBLE],
+            # ta=[pva.DOUBLE],  # unused below
             Time=[pva.DOUBLE],
-            # timeStamp (or dateTimeStamp) is expected, same dict
+            # customary, not required
+            # timeStamp (or dateTimeStamp)
             timeStamp=dict(secondsPastEpoch=pva.UINT, nanoseconds=pva.UINT),
         )
     )
