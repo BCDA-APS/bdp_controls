@@ -76,13 +76,12 @@ received ``PvObject``.  For example, the _daq-aggregator_ (see
 https://git.aps.anl.gov/C2/daq/apps/daq-aggregator) can monitor any number of
 CA and/or PVA channels and create/serve aggregate PV Object.
 
-Create IOCs to serve PVs:
+Create IOCs (in Python) to serve PVs:
 
-Create a simple test server for something other than AD images, use
-something like this:
+Example PVA IOC - simple test server for something other than AD images:
 https://git.aps.anl.gov/C2/daq/apps/daq-aggregator/-/blob/master/daq_aggregator/pvaTestServer.py
 
-Create CA IOC in python:
+Example CA IOC:
 https://github.com/epics-base/pvaPy/blob/master/examples/caIocExample.py
 """
 
