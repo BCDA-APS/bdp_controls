@@ -1,7 +1,22 @@
 #!/usr/bin/env python
 
 """
-PVA server and client publishing a Python dict in JSON from a single PVAccess PV.
+PVA server and client communicating a Python dict in JSON in a single PVAccess PV.
+
+USAGE::
+
+$ bdpPvaMetadata.py --help
+usage: bdpPvaMetadata.py [-h] [--channel CHANNEL] [--runtime RUNTIME] [--update-freq UPDATEFREQ] [--listener]
+
+PVA server and client communicating a Python dict in JSON in a single PVAccess PV.
+
+options:
+  -h, --help            show this help message and exit
+  --channel CHANNEL     Server channel name.
+  --runtime RUNTIME     Server runtime (default: 60.0 seconds).
+  --update-freq UPDATEFREQ
+                        Update frequency in Hz (default: 1.0).
+  --listener            Run a PVA listener client instead of a PVA server.
 """
 
 import random
