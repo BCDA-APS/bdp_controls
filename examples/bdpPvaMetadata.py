@@ -182,6 +182,7 @@ class Listener(PvaMetadataClass):
 
     def __init__(self, pvname=None) -> None:
         self.pvname = pvname or DEFAULT_CHANNEL
+        self.start()
 
     @property
     def running(self):
@@ -291,8 +292,7 @@ def run_server_demo(channel=None, runtime=60, updateFreq=1.0):
 def run_listener(pvname=None, runtime=60):
     pvname = pvname or DEFAULT_CHANNEL
     listener = MyListener(pvname)
-    listener.start()
-    print(f"Starting PVA {listener=}")
+    print(f"Running PVA {listener=} for {runtime} s.")
     time.sleep(runtime)
     listener.stop()
 
