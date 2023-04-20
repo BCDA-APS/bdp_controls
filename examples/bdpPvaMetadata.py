@@ -19,15 +19,15 @@ options:
   --listener            Run a PVA listener client instead of a PVA server.
 """
 
-import random
 import datetime
-import time
-import logging
 import json
+import logging
+import random
+import time
 import uuid
-import pyRestTable
-import pvaccess as pva
 
+import pvaccess as pva
+import pyRestTable
 
 DEFAULT_CHANNEL = "PVA:TEST"
 logger = logging.getLogger(__name__)
@@ -137,9 +137,7 @@ class Server(PvaMetadataClass):
 
         This is the method to override in user-specific subclasses.
         """
-        content = {
-            "undefined": "Override getContent() method in a subclass of Server."
-        }
+        content = {"undefined": "Override getContent() method in a subclass of Server."}
         return content
 
     def publishContent(self, content=None):
@@ -184,7 +182,7 @@ class Listener(PvaMetadataClass):
 
     def __init__(self, pvname=None) -> None:
         self.pvname = pvname or DEFAULT_CHANNEL
-    
+
     @property
     def running(self):
         return self.channel is not None
@@ -195,17 +193,17 @@ class Listener(PvaMetadataClass):
         self.channel = pva.Channel(self.pvname)
         self.channel.subscribe("monitor", self.monitor)
         self.channel.startMonitor()
-    
+
     def stop(self):
         if not self.running:
             raise PvaListenerError("PVA Listener is not running.")
         self.channel.unsubscribe("monitor")
         self.channel.stopMonitor()
         self.channel = None
-    
+
     def __repr__(self):
         return f"Listener(pvname={self.pvname})"
-        
+
     def getDatetime(self, pv_object):
         key = "timeStamp"
         timestamp = pv_object[key]["secondsPastEpoch"]
@@ -252,17 +250,14 @@ class MyServer(Server):
             "random": value,
             "boolean": value > 0.5,  # True or False
             "text": str(value),
-            "array": [value, 1+value, 2+value],
-            "text_array": [str(value), str(1+value), str(2+value)],
-            "mixed": dict(
-                constants=[1, True, "string"]
-            )
+            "array": [value, 1 + value, 2 + value],
+            "text_array": [str(value), str(1 + value), str(2 + value)],
+            "mixed": dict(constants=[1, True, "string"]),
         }
         return content
 
 
 class MyListener(Listener):
-
     def monitor(self, pv_object):
         dt = self.getDatetime(pv_object)
         content = self.getContent(pv_object)
