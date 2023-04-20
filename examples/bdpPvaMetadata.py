@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-PVA server publishing a Python dict in JSON from a single PVAccess PV.
+PVA server and client publishing a Python dict in JSON from a single PVAccess PV.
 """
 
 import random
