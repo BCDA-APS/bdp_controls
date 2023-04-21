@@ -3,7 +3,7 @@
 """
 PVA server and client communicating a Python dict in JSON in a single PVAccess PV.
 
-See the ``myExample.py`` file for a custom server/listener implementation.
+See the ``myExampleServer.py`` file for a custom server example.
 
 USAGE::
 
@@ -56,6 +56,10 @@ def dictionary_to_table(o):
     return table
 
 
+class PvaMetadataClassError(RuntimeError):
+    """General errors involving the PVA metadata class."""
+
+
 class PvaListenerError(RuntimeError):
     """General errors involving the PVA listener."""
 
@@ -98,7 +102,7 @@ class PvaMetadataClass:
     @pvname.setter
     def pvname(self, value):
         if self.pvname is not None:
-            raise PvaServerError("Cannot change pvname: {self.pvname}")
+            raise PvaMetadataClassError("Cannot change pvname: {self.pvname}")
         self._pvname = value
 
 
@@ -110,7 +114,6 @@ class Server(PvaMetadataClass):
 
     def __init__(self, pvname=None) -> None:
         self.pvname = pvname or DEFAULT_CHANNEL
-        self.start()
 
     @property
     def running(self):
@@ -135,6 +138,9 @@ class Server(PvaMetadataClass):
         self.server.stop()
         self.server = None
         self.pv = None
+
+    def __repr__(self):
+        return f"Server(pvname={self.pvname}, running={self.running})"
 
     def getValue(self):
         """
@@ -187,7 +193,6 @@ class Listener(PvaMetadataClass):
 
     def __init__(self, pvname=None) -> None:
         self.pvname = pvname or DEFAULT_CHANNEL
-        self.start()
 
     @property
     def running(self):
@@ -195,7 +200,7 @@ class Listener(PvaMetadataClass):
 
     def start(self):
         if self.running:
-            raise PvaListenerError(f"PVA Listener is running: {self}.")
+            raise PvaListenerError(f"PVA Listener already running: {self}.")
         self.channel = pva.Channel(self.pvname)
         self.channel.subscribe("monitor", self.monitor)
         self.channel.startMonitor()
@@ -208,7 +213,7 @@ class Listener(PvaMetadataClass):
         self.channel = None
 
     def __repr__(self):
-        return f"Listener(pvname={self.pvname})"
+        return f"Listener(pvname={self.pvname}, running={self.running})"
 
     def getDatetime(self, pv_object):
         key = "timeStamp"
@@ -282,6 +287,7 @@ def run_server_demo(channel=None, runtime=60, updateFreq=1.0):
     channel = channel or DEFAULT_CHANNEL
 
     server = MyServer(channel)
+    server.start()
 
     print(f"Starting PVA {server=} with {channel=}")
 
@@ -307,6 +313,7 @@ def run_listener(pvname=None, runtime=60):
     pvname = pvname or DEFAULT_CHANNEL
     listener = MyListener(pvname)
     listener.user_function = example_listener_callback
+    listener.start()
     print(f"Running PVA {listener=} for {runtime} s.")
     time.sleep(runtime)
     listener.stop()
