@@ -9,7 +9,7 @@ Add minimal effort in each part to be customized.  Just for demo.
 import time
 import bdpPvaMetadata
 
-DEFAULT_CHANNEL = "Pete:Handshake"
+DEFAULT_CHANNEL = "Bdp1:Handshake"
 
 class MyServer(bdpPvaMetadata.Server):
     def getValue(self):
