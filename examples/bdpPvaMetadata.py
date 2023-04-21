@@ -131,7 +131,7 @@ class Server(PvaMetadataClass):
         self.server = None
         self.pv = None
 
-    def getContent(self):
+    def getValue(self):
         """
         Return Python dict with content to be published as JSON over PVA.
 
@@ -211,7 +211,7 @@ class Listener(PvaMetadataClass):
         timestamp += pv_object[key]["nanoseconds"] * 1e-9
         return datetime.datetime.fromtimestamp(timestamp)
 
-    def getContent(self, pv_object):
+    def getValue(self, pv_object):
         return self.unmarshall(pv_object["value"])
 
     def getIndex(self, pv_object):
@@ -222,10 +222,10 @@ class Listener(PvaMetadataClass):
 
     def monitor(self, pv_object):
         dt = self.getDatetime(pv_object)
-        content = self.getContent(pv_object)
-        counter = self.getIndex(pv_object)
+        value = self.getValue(pv_object)
+        _index = self.getIndex(pv_object)
         uid = self.getUid(pv_object)
-        print(f"{dt}: #{counter}, {uid=}, {content=}")
+        print(f"{dt}: #{_index}, {uid=}, {value=}")
 
 
 class MyServer(Server):
@@ -236,7 +236,7 @@ class MyServer(Server):
     returning a Python dictionary with the content to be published.
     """
 
-    def getContent(self):
+    def getValue(self):
         """
         Return Python dict with content to be published as JSON over PVA.
 
@@ -259,13 +259,17 @@ class MyServer(Server):
 
 
 class MyListener(Listener):
+    """Example custom subclass of Listener."""
+    user_function = None
+
     def monitor(self, pv_object):
         dt = self.getDatetime(pv_object)
-        content = self.getContent(pv_object)
-        counter = self.getIndex(pv_object)
+        content = self.getValue(pv_object)
+        _index = self.getIndex(pv_object)
         uid = self.getUid(pv_object)
-        print(f"{dt}: #{counter}, {uid=}")
-        print(dictionary_to_table(content))
+
+        if self.user_function is not None:
+            self.user_function(_index, uid, dt, content)
 
 
 def run_server_demo(channel=None, runtime=60, updateFreq=1.0):
@@ -280,7 +284,7 @@ def run_server_demo(channel=None, runtime=60, updateFreq=1.0):
     deadline = startTime + runtime
 
     while time.time() < deadline:
-        content = server.getContent()
+        content = server.getValue()
         server.publishContent(content)
         print(f"{datetime.datetime.now()}: {content=}")
         time.sleep(1 / updateFreq)
@@ -289,9 +293,14 @@ def run_server_demo(channel=None, runtime=60, updateFreq=1.0):
     server.stop()
 
 
+def example_listener_callback(_index, uid, dt, content):
+    print(f"example_listener_callback({_index=}, {uid=}, {dt=}, {content=})")
+
+
 def run_listener(pvname=None, runtime=60):
     pvname = pvname or DEFAULT_CHANNEL
     listener = MyListener(pvname)
+    listener.user_function = example_listener_callback
     print(f"Running PVA {listener=} for {runtime} s.")
     time.sleep(runtime)
     listener.stop()
