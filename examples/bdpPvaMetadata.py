@@ -3,6 +3,8 @@
 """
 PVA server and client communicating a Python dict in JSON in a single PVAccess PV.
 
+See the ``myExample.py`` file for a custom server/listener implementation.
+
 USAGE::
 
     $ bdpPvaMetadata.py --help
@@ -21,13 +23,14 @@ USAGE::
 
 import datetime
 import json
+# import cjson as json  # franzinc / python-cjson 1.1.0
 import logging
 import random
 import time
 import uuid
 
 import pvaccess as pva
-import pyRestTable
+
 
 DEFAULT_CHANNEL = "PVA:TEST"
 logger = logging.getLogger(__name__)
@@ -40,6 +43,8 @@ def dictionary_to_table(o):
     Nested dictionaries are possible, where the value of some key
     can be a dictionary.
     """
+    import pyRestTable
+
     if not isinstance(o, dict):
         return o
 
@@ -81,10 +86,10 @@ class PvaMetadataClass:
         )
 
     def marshall(self, content):
-        return json.dumps(content)  # TODO: try..except?
+        return json.dumps(content, indent=2)
 
     def unmarshall(self, content):
-        return json.loads(content)  # TODO: try..except?
+        return json.loads(content)
 
     @property
     def pvname(self):
@@ -232,7 +237,7 @@ class MyServer(Server):
     """
     Example of a user-defined subclass of Server.
 
-    In the subclass, override (re-define) the getContent(),
+    In the subclass, override (re-define) the getValue(),
     returning a Python dictionary with the content to be published.
     """
 
@@ -253,7 +258,7 @@ class MyServer(Server):
             "text": str(value),
             "array": [value, 1 + value, 2 + value],
             "text_array": [str(value), str(1 + value), str(2 + value)],
-            "mixed": dict(constants=[1, True, "string"]),
+            "mixed": dict(constants=[1, True, "string", "-1.2", 1.2]),
         }
         return content
 
@@ -263,13 +268,13 @@ class MyListener(Listener):
     user_function = None
 
     def monitor(self, pv_object):
-        dt = self.getDatetime(pv_object)
-        content = self.getValue(pv_object)
-        _index = self.getIndex(pv_object)
+        content = self.getValue(pv_object)  # This is the dict
+        index_ = self.getIndex(pv_object)
         uid = self.getUid(pv_object)
+        dt = self.getDatetime(pv_object)
 
         if self.user_function is not None:
-            self.user_function(_index, uid, dt, content)
+            self.user_function(index_, uid, dt, content)
 
 
 def run_server_demo(channel=None, runtime=60, updateFreq=1.0):
@@ -293,8 +298,9 @@ def run_server_demo(channel=None, runtime=60, updateFreq=1.0):
     server.stop()
 
 
-def example_listener_callback(_index, uid, dt, content):
-    print(f"example_listener_callback({_index=}, {uid=}, {dt=}, {content=})")
+def example_listener_callback(index_, uid, dt, content):
+    print(f"example_listener_callback({index_=}, {uid=}, {dt=}, {content=})")
+    # print(dictionary_to_table(content))
 
 
 def run_listener(pvname=None, runtime=60):
