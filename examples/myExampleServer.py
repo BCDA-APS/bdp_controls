@@ -7,20 +7,14 @@ Add minimal effort in each part to be customized.  Just for demo.
 """
 
 import time
-import bdpPvaMetadata
+import bdp_handshake
 
 DEFAULT_CHANNEL = "Bdp1:Handshake"
 
 
-class MyServer(bdpPvaMetadata.HandshakeServer):
+class MyServer(bdp_handshake.HandshakeServer):
     def getDictionary(self):
         return {"example": 1.0}
-
-
-# example only
-# class MyListener(bdpPvaMetadata.Listener):
-#     def monitor(self, pv_object):
-#         print(self.getValue(pv_object))
 
 
 def run_server(duration=10, period=1):

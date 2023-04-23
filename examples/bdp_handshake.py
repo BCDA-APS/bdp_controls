@@ -337,9 +337,9 @@ def example_listener_callback(index_, uid, dt, dictionary):
     """Example: Called from PVA update event."""
     print(
         "example_listener_callback("
-        f"{index_=}"
-        f", {dt=}"
-        f", {uid=}"
+        f"#{index_}"
+        f", {str(dt)}"
+        f", uid={uid[:7]}"  # just the first 7 characters
         f", {dictionary=})"
     )
 
