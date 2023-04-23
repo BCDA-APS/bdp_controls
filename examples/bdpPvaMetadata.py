@@ -32,43 +32,23 @@ import uuid
 import pvaccess as pva
 
 
-DEFAULT_CHANNEL = "PVA:TEST"
+DEFAULT_CHANNEL = "BDP:Handshake"
 logger = logging.getLogger(__name__)
 
 
-def dictionary_to_table(o):
-    """
-    Make a pyRestTable from a dictionary.
-
-    Nested dictionaries are possible, where the value of some key
-    can be a dictionary.
-    """
-    import pyRestTable
-
-    if not isinstance(o, dict):
-        return o
-
-    table = pyRestTable.Table()
-    table.labels = "key value".split()
-    for k, v in sorted(o.items()):
-        table.addRow((k, str(dictionary_to_table(v)).rstrip()))
-
-    return table
+class HandshakeBaseError(RuntimeError):
+    """Errors from HandshakeBase."""
 
 
-class PvaMetadataClassError(RuntimeError):
-    """General errors involving the PVA metadata class."""
+class HandshakeListenerError(RuntimeError):
+    """Errors from HandshakeListener."""
 
 
-class PvaListenerError(RuntimeError):
-    """General errors involving the PVA listener."""
+class HandshakeServerError(RuntimeError):
+    """Errors from HandshakeServer."""
 
 
-class PvaServerError(RuntimeError):
-    """General errors involving the PVA server."""
-
-
-class PvaMetadataClass:
+class HandshakeBase:
     """Structure of the PVA object."""
 
     def newPvaObject(self):
@@ -80,20 +60,25 @@ class PvaMetadataClass:
         return pva.PvObject(
             # define the data types of _this_ PVA object
             dict(
-                value=pva.STRING,  # Python dict as JSON
-                index=pva.UINT,  # update number, starts 0
-                uid=pva.STRING,  # uuid.uuid4
-                # customary, not required
-                # timeStamp (or dateTimeStamp)
+                dictionary=pva.STRING,  # Python dict, see marshall & unmarshall
+                index=pva.UINT,  # sequential update number, starts 0
+                uid=pva.STRING,  # unique identifier (uuid.uuid4)
                 timeStamp=dict(secondsPastEpoch=pva.UINT, nanoseconds=pva.UINT),
             )
         )
 
     def marshall(self, content):
+        """Transform dictionary into a string."""
         return json.dumps(content, indent=2)
 
     def unmarshall(self, content):
+        """Transform string back into a dictionary."""
         return json.loads(content)
+
+    @property
+    def running(self):
+        """Redefine in both Server and Listener subclasses."""
+        return False  # Cannot "run" the base class.
 
     @property
     def pvname(self):
@@ -101,12 +86,31 @@ class PvaMetadataClass:
 
     @pvname.setter
     def pvname(self, value):
-        if self.pvname is not None:
-            raise PvaMetadataClassError("Cannot change pvname: {self.pvname}")
+        if self.running:
+            raise HandshakeBaseError("Cannot change pvname: {self.pvname}")
         self._pvname = value
 
 
-class Server(PvaMetadataClass):
+class HandshakeServer(HandshakeBase):
+    """
+    Run a PVA server for BDP handshakes.
+
+    Override the ``getDictionary()`` method in a subclass to define the content
+    of the dictionary to be published.  See the `MyServer` class below for an
+    example.
+
+    EXAMPLE::
+
+        server = HandshakeServer("BDP:Handshake")
+        server.start()
+        #
+        # repeat as required by application
+        # ... publish new content ...
+        server.publishDictionary(self.getDictionary())
+        #
+        server.stop()
+    """
+
     _pvname = None
     pv = None
     counter = None
@@ -121,7 +125,7 @@ class Server(PvaMetadataClass):
 
     def start(self):
         if self.running:
-            raise PvaServerError(f"PVA server already running: {self.server}")
+            raise HandshakeServerError(f"PVA server already running: {self.server}")
 
         self.pv = self.newPvaObject()
         self.counter = 0
@@ -133,63 +137,90 @@ class Server(PvaMetadataClass):
 
     def stop(self):
         if not self.running:
-            raise PvaServerError("PVA server is not running.")
+            raise HandshakeServerError("PVA server is not running.")
 
         self.server.stop()
         self.server = None
         self.pv = None
 
     def __repr__(self):
-        return f"Server(pvname={self.pvname}, running={self.running})"
+        return (
+            f"HandshakeServer(pvname={self.pvname}"
+            f", running={self.running})"
+        )
 
-    def getValue(self):
+    def getDictionary(self):
         """
         Return Python dict with content to be published as JSON over PVA.
 
-        This is the method to override in user-specific subclasses.
+        NOTE: Override this the method in user-specific subclasses.
         """
-        content = {"undefined": "Override getContent() method in a subclass of Server."}
-        return content
+        dictionary = {
+            "undefined": "Override getDictionary() method in a subclass of Server."
+        }
+        return dictionary
 
-    def publishContent(self, content=None):
+    def publishDictionary(self, dictionary=None):
         """
-        Return a new PVA object with the new content.
+        Publish the dictionary by PVA.
 
-        Why not modify the public PV?
-        To avoid multiple PVA update events,
-        we'll write new content to a _local_ PVA object,
-        then update the published PVA object all at once.
+        Q: Why not modify the public PV?
+        A: To avoid multiple PVA update events, we'll write new content to a
+        _local_ PVA object, then update the _published_ PVA object all at once.
         """
         if self.server is None:
-            raise PvaServerError("PVA server is not running.")
-
-        md_dict = content or {}
-
-        # generate some new content
-        payload = self.marshall(md_dict)
+            raise HandshakeServerError("PVA server is not running.")
 
         self.counter += 1
-        uid = uuid.uuid4()
         now = time.time()
         secondsPastEpoch = int(now)
         nanoseconds = int((now - secondsPastEpoch) * 1e9)
 
-        logger.debug("new PVA content #%d, uid=%s", self.counter, uid)
-
-        # fill the local pv object with the new content
+        # Write new content to a local PVA object.
         pv = self.newPvaObject()
-        pv["value"] = payload
+        pv["dictionary"] = self.marshall(dictionary or {})
         pv["index"] = self.counter
-        pv["uid"] = str(uid)
+        pv["uid"] = str(uuid.uuid4())
         pv["timeStamp.secondsPastEpoch"] = secondsPastEpoch
         pv["timeStamp.nanoseconds"] = nanoseconds
 
-        self.server.update(pv)  # publish the new content
+        logger.debug("new PVA content #%d, uid=%s", pv["index"], pv["uid"])
+
+        # Publish the new content from the local PVA object.
+        self.server.update(pv)
 
 
-class Listener(PvaMetadataClass):
+class HandshakeListener(HandshakeBase):
+    """
+    Run a PVA LIstener (client) for BDP handshakes.
+
+    EXAMPLE:
+    
+    This simplistic example prints the dictionary as it is received by PVA.
+
+        def example_listener_callback(index_, uid, dt, dictionary):
+            "Called from PVA update event"
+            print(
+                "example_listener_callback("
+                f"{index_=}"
+                f", {dt=}"
+                f", {uid=}"
+                f", {dictionary=})"
+            )
+
+        listener = HandshakeListener("BDP:Handshake")
+        listener.user_function = example_listener_callback
+        listener.start()
+        print(f"Running PVA {listener=} for {runtime} s.")
+        # ... wait 20s for any PVA monitor events ...
+        time.sleep(20)
+        listener.stop()
+
+    """
+
     _pvname = None
     channel = None
+    user_function = None
 
     def __init__(self, pvname=None) -> None:
         self.pvname = pvname or DEFAULT_CHANNEL
@@ -200,53 +231,65 @@ class Listener(PvaMetadataClass):
 
     def start(self):
         if self.running:
-            raise PvaListenerError(f"PVA Listener already running: {self}.")
+            raise HandshakeListenerError(f"PVA Listener already running: {self}.")
         self.channel = pva.Channel(self.pvname)
         self.channel.subscribe("monitor", self.monitor)
         self.channel.startMonitor()
 
     def stop(self):
         if not self.running:
-            raise PvaListenerError("PVA Listener is not running.")
+            raise HandshakeListenerError("PVA Listener is not running.")
         self.channel.unsubscribe("monitor")
         self.channel.stopMonitor()
         self.channel = None
 
     def __repr__(self):
-        return f"Listener(pvname={self.pvname}, running={self.running})"
+        return (
+            "HandshakeListener("
+            f"pvname={self.pvname}"
+            f", running={self.running})"
+        )
 
     def getDatetime(self, pv_object):
+        """Return floating-point time from PVA object."""
         key = "timeStamp"
         timestamp = pv_object[key]["secondsPastEpoch"]
         timestamp += pv_object[key]["nanoseconds"] * 1e-9
         return datetime.datetime.fromtimestamp(timestamp)
 
-    def getValue(self, pv_object):
-        return self.unmarshall(pv_object["value"])
+    def getDictionary(self, pv_object):
+        """Return the (unstructured) dictionary from the PVA object."""
+        return self.unmarshall(pv_object["dictionary"])
 
     def getIndex(self, pv_object):
+        """Return the sequential index number from the PVA object."""
         return pv_object["index"]
 
     def getUid(self, pv_object):
+        """Return the unique identifier from the PVA object."""
         return pv_object["uid"]
 
     def monitor(self, pv_object):
-        dt = self.getDatetime(pv_object)
-        value = self.getValue(pv_object)
-        _index = self.getIndex(pv_object)
+        """Called when there is new PVA content."""
+        dictionary = self.getDictionary(pv_object)
+        index_ = self.getIndex(pv_object)
         uid = self.getUid(pv_object)
-        print(f"{dt}: #{_index}, {uid=}, {value=}")
+        dt = self.getDatetime(pv_object)
+        logger.debug("%s: #{index_}, uid=%s, %s", dt, index_, uid, dictionary)
+
+        if self.user_function is not None:
+            self.user_function(index_, uid, dt, dictionary)
 
 
-class MyServer(Server):
+class MyServer(HandshakeServer):
     """
     Example of a user-defined subclass of Server.
 
-    In the subclass, override (re-define) the getValue(),
+    In the subclass, override (re-define) the getDictionary() method,
     returning a Python dictionary with the content to be published.
     """
 
-    def getValue(self):
+    def getDictionary(self):
         """
         Return Python dict with content to be published as JSON over PVA.
 
@@ -256,30 +299,16 @@ class MyServer(Server):
         dictionary keys are defined with no particular rules (other than valid
         dictionary keys).
         """
-        value = round(random.uniform(0, 1), 2)
-        content = {
-            "random": value,
-            "boolean": value > 0.5,  # True or False
-            "text": str(value),
-            "array": [value, 1 + value, 2 + value],
-            "text_array": [str(value), str(1 + value), str(2 + value)],
+        number = round(random.uniform(0, 1), 2)
+        dictionary = {
+            "random": number,
+            "boolean": number > 0.5,  # True or False
+            "text": str(number),
+            "array": [number, 1 + number, 2 + number],
+            "text_array": [str(number), str(1 + number), str(2 + number)],
             "mixed": dict(constants=[1, True, "string", "-1.2", 1.2]),
         }
-        return content
-
-
-class MyListener(Listener):
-    """Example custom subclass of Listener."""
-    user_function = None
-
-    def monitor(self, pv_object):
-        content = self.getValue(pv_object)  # This is the dict
-        index_ = self.getIndex(pv_object)
-        uid = self.getUid(pv_object)
-        dt = self.getDatetime(pv_object)
-
-        if self.user_function is not None:
-            self.user_function(index_, uid, dt, content)
+        return dictionary
 
 
 def run_server_demo(channel=None, runtime=60, updateFreq=1.0):
@@ -295,23 +324,29 @@ def run_server_demo(channel=None, runtime=60, updateFreq=1.0):
     deadline = startTime + runtime
 
     while time.time() < deadline:
-        content = server.getValue()
-        server.publishContent(content)
-        print(f"{datetime.datetime.now()}: {content=}")
+        dictionary = server.getDictionary()
+        server.publishDictionary(dictionary)
+        print(f"{datetime.datetime.now()}: {dictionary=}")
         time.sleep(1 / updateFreq)
 
     print(f"Stopping PVA server for: {server.pvname}")
     server.stop()
 
 
-def example_listener_callback(index_, uid, dt, content):
-    print(f"example_listener_callback({index_=}, {uid=}, {dt=}, {content=})")
-    # print(dictionary_to_table(content))
+def example_listener_callback(index_, uid, dt, dictionary):
+    """Example: Called from PVA update event."""
+    print(
+        "example_listener_callback("
+        f"{index_=}"
+        f", {dt=}"
+        f", {uid=}"
+        f", {dictionary=})"
+    )
 
 
 def run_listener(pvname=None, runtime=60):
     pvname = pvname or DEFAULT_CHANNEL
-    listener = MyListener(pvname)
+    listener = HandshakeListener(pvname)
     listener.user_function = example_listener_callback
     listener.start()
     print(f"Running PVA {listener=} for {runtime} s.")

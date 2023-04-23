@@ -12,8 +12,8 @@ import bdpPvaMetadata
 DEFAULT_CHANNEL = "Bdp1:Handshake"
 
 
-class MyServer(bdpPvaMetadata.Server):
-    def getValue(self):
+class MyServer(bdpPvaMetadata.HandshakeServer):
+    def getDictionary(self):
         return {"example": 1.0}
 
 
@@ -30,7 +30,7 @@ def run_server(duration=10, period=1):
     server.start()
     deadline = time.time() + duration
     while time.time() < deadline:
-        server.publishContent(server.getValue())
+        server.publishDictionary(server.getDictionary())
         time.sleep(period)
     server.stop()
 
