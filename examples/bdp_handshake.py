@@ -5,6 +5,23 @@ PVA server and client communicating a Python dict in JSON in a single PVAccess P
 
 See the ``myExampleServer.py`` file for a custom server example.
 
+_Question_:
+  What is the use case here?
+
+_Answer_:
+  This module addresses the communication of handshake and other details between
+  data acquisition and data handling processes. Some handshake details can be
+  defined by predetermined structure, such as ``pva.UINT``, ...  Other details
+  may have unknown structure, such as additional metadata in a Python
+  dictionary.
+
+  Both data handling and acquisition can be a server, communicating to the
+  other.
+
+  This module provides Python classes as a common interface to communicate
+  handshakes and unstructured metadata. It also shows how client and server code
+  must match to handle a common structure.
+
 USAGE::
 
     $ bdpPvaMetadata.py --help
@@ -195,7 +212,7 @@ class HandshakeListener(HandshakeBase):
     Run a PVA LIstener (client) for BDP handshakes.
 
     EXAMPLE:
-    
+
     This simplistic example prints the dictionary as it is received by PVA.
 
         def example_listener_callback(index_, uid, dt, dictionary):
