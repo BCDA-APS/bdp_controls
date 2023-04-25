@@ -210,6 +210,18 @@ class HandshakeServer(HandshakeBase):
         # Publish the new content from the local PVA object.
         self.server.update(pv)
 
+    @property
+    def connected(self):
+        return self.channel.isConnected()
+
+    def wait_connection(self, timeout=10):
+        deadline = time.time() + timeout
+        while time.time() <= deadline:
+            if self.connected:
+                return
+            time.sleep(timeout/30)
+        raise TimeoutError(f"{self}: TimeoutError after {timeout} s.")
+
 
 class HandshakeListener(HandshakeBase):
     """
@@ -313,16 +325,23 @@ class HandshakeListener(HandshakeBase):
         seconds = int(now)
         nanos = int((now - seconds) * 1e9)
 
-        pvobject = channel.get()
+        # print(f"{channel=}  {channel.isConnected()=}")
+        if channel.isConnected():
+            pvobject = channel.get()
+        else:
+            pvobject = self.newPvaObject()
+        # print(f"{pvobject=}  {channel.isConnected()=}")
         pvobject["dictionary"] = self.marshall(dictionary)
         pvobject["index"] += 1
         pvobject["uid"] = str(uuid.uuid4())
         pvobject["timeStamp.secondsPastEpoch"] = seconds
         pvobject["timeStamp.nanoseconds"] = nanos
+        
+        # print(f"{pvobject=}  {channel.isConnected()=}")
 
         channel.put(pvobject)
 
-    def put_and_wait(self, listener, dictionary, timeout=5, attempts=1, **kwargs):
+    def put_and_wait(self, dictionary, timeout=5, attempts=1, **kwargs):
         """
         Publish new dictionary content and wait for acknowledgment by client.
 
@@ -336,17 +355,20 @@ class HandshakeListener(HandshakeBase):
 
         # add the timeout value
         dictionary["timeout"] = timeout
-        listener.put(dictionary, **kwargs)
+        self.put(dictionary, **kwargs)
 
         # wait for success or timeout
-        for attempt in attempts:
+        for attempt in range(attempts):
             deadline = time.time() + timeout
             while time.time() < deadline:
-                if self.acknowledgment_received:
+                if self.acknowledged:
                     return
                 time.sleep(0.1)
             logger.debug("Timeout after attempt %s of %s", attempt, attempts)
-        raise TimeoutError(f"No acknowledgement after {attempts=} with {timeout=} s.")
+        raise TimeoutError(
+            f"No acknowledgement after {attempts} attempts"
+            f", each with {timeout} s timeout."
+        )
 
     def acknowledge_action(self, success=True):
         """
@@ -364,6 +386,18 @@ class HandshakeListener(HandshakeBase):
     @acknowledged.setter
     def acknowledged(self, value):
         self._acknowledged = value
+
+    @property
+    def connected(self):
+        return self.channel.isConnected()
+
+    def wait_connection(self, timeout=10):
+        deadline = time.time() + timeout
+        while time.time() <= deadline:
+            if self.connected:
+                return
+            time.sleep(timeout/30)
+        raise TimeoutError(f"{self}: TimeoutError after {timeout} s.")
 
 
 class MyServer(HandshakeServer):
