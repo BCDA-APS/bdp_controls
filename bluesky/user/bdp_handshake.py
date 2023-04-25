@@ -339,18 +339,22 @@ class HandshakeListener(HandshakeBase):
         listener.put(dictionary, **kwargs)
 
         # wait for success or timeout
-        # The _acknowledgment_ is set by the pvmonitor process
-        # which is a HANDSHAKE_ACKNOWLEGED message returned by the client.
         for attempt in attempts:
             deadline = time.time() + timeout
             while time.time() < deadline:
                 if self.acknowledgment_received:
                     return
                 time.sleep(0.1)
+            logger.debug("Timeout after attempt %s of %s", attempt, attempts)
         raise TimeoutError(f"No acknowledgement after {attempts=} with {timeout=} s.")
 
     def acknowledge_action(self, success=True):
-        """Listener reported that the action was received (or not)."""
+        """
+        Listener reported that the action was received (or not).
+
+        The ``acknowledged`` property is set by the pvmonitor process
+        when a HANDSHAKE_ACKNOWLEGED message is returned by the client.
+        """
         self.acknowledged = success == True
 
     @property

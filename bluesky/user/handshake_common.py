@@ -6,8 +6,7 @@ IPC between data acquisition and data processing.
 
 import datetime
 
-import pvaccess as pva
-from bdp_handshake import HANDSHAKE_ACKNOWLEGED
+from bdp_handshake import HANDSHAKE_ACKNOWLEGED  # needed for v1 only
 
 PVA_PREFIX = "bdp:"
 ACQUISITION_PV = f"{PVA_PREFIX}handshake"
