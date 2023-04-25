@@ -54,7 +54,7 @@ class Manager:
             self.publish(message)
 
     def publish(self, dictionary):
-        self.server.publishDictionary(dictionary)
+        self.server.put(dictionary)
         report("   <<<", f"{self.server}: {dictionary=}")
 
     def acknowledge(self, action, **kwargs):

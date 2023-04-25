@@ -41,7 +41,6 @@ USAGE::
 import datetime
 import json
 
-# import cjson as json  # franzinc / python-cjson 1.1.0
 import logging
 import random
 import time
@@ -123,13 +122,14 @@ class HandshakeServer(HandshakeBase):
         #
         # repeat as required by application
         # ... publish new content ...
-        server.publishDictionary(self.getDictionary())
+        server.put(self.getDictionary())
         #
         server.stop()
     """
 
     _pvname = None
     pv = None
+    channel = None
     counter = None
     server = None
 
@@ -151,6 +151,8 @@ class HandshakeServer(HandshakeBase):
         logger.info("Starting PVA server: %s", self.pvname)
         self.server = pva.PvaServer(self.pvname, self.pv)
         self.server.start()
+        
+        self.channel = pva.Channel(self.pvname)
 
     def stop(self):
         if not self.running:
@@ -159,6 +161,7 @@ class HandshakeServer(HandshakeBase):
         self.server.stop()
         self.server = None
         self.pv = None
+        self.channel = None
 
     def __repr__(self):
         return f"HandshakeServer(pvname={self.pvname}" f", running={self.running})"
@@ -174,7 +177,7 @@ class HandshakeServer(HandshakeBase):
         }
         return dictionary
 
-    def publishDictionary(self, dictionary=None):
+    def put(self, dictionary, **kwargs):
         """
         Publish the dictionary by PVA.
 
@@ -189,11 +192,13 @@ class HandshakeServer(HandshakeBase):
         now = time.time()
         secondsPastEpoch = int(now)
         nanoseconds = int((now - secondsPastEpoch) * 1e9)
+        dictionary.update(**kwargs)
 
         # Write new content to a local PVA object.
-        pv = self.newPvaObject()
+        # pv = self.newPvaObject()
+        pv = self.channel.get()
         pv["dictionary"] = self.marshall(dictionary or {})
-        pv["index"] = self.counter
+        pv["index"] += 1
         pv["uid"] = str(uuid.uuid4())
         pv["timeStamp.secondsPastEpoch"] = secondsPastEpoch
         pv["timeStamp.nanoseconds"] = nanoseconds
@@ -206,7 +211,7 @@ class HandshakeServer(HandshakeBase):
 
 class HandshakeListener(HandshakeBase):
     """
-    Run a PVA LIstener (client) for BDP handshakes.
+    Run a PVA Listener (client) for BDP handshakes.
 
     EXAMPLE:
 
@@ -269,7 +274,10 @@ class HandshakeListener(HandshakeBase):
 
     def getDictionary(self, pv_object):
         """Return the (unstructured) dictionary from the PVA object."""
-        return self.unmarshall(pv_object["dictionary"])
+        payload = pv_object["dictionary"]
+        if len(payload) == 0:
+            payload = "{}"
+        return self.unmarshall(payload)
 
     def getIndex(self, pv_object):
         """Return the sequential index number from the PVA object."""
@@ -290,6 +298,23 @@ class HandshakeListener(HandshakeBase):
         if self.user_function is not None:
             self.user_function(index_, uid, dt, dictionary)
 
+    def put(self, dictionary, **kwargs):
+        """Publish the dictionary by PVA."""
+        channel = self.channel
+
+        dictionary.update(**kwargs)
+        now = time.time()
+        seconds = int(now)
+        nanos = int((now - seconds) * 1e9)
+
+        pvobject = channel.get()
+        pvobject["dictionary"] = self.marshall(dictionary)
+        pvobject["index"] += 1
+        pvobject["uid"] = str(uuid.uuid4())
+        pvobject["timeStamp.secondsPastEpoch"] = seconds
+        pvobject["timeStamp.nanoseconds"] = nanos
+
+        channel.put(pvobject)
 
 class MyServer(HandshakeServer):
     """
@@ -335,7 +360,7 @@ def run_server_demo(channel=None, runtime=60, updateFreq=1.0):
 
     while time.time() < deadline:
         dictionary = server.getDictionary()
-        server.publishDictionary(dictionary)
+        server.put(dictionary)
         print(f"{datetime.datetime.now()}: {dictionary=}")
         time.sleep(1 / updateFreq)
 
