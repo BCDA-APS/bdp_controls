@@ -40,7 +40,6 @@ USAGE::
 
 import datetime
 import json
-
 import logging
 import random
 import time
@@ -50,6 +49,9 @@ import pvaccess as pva
 
 DEFAULT_CHANNEL = "BDP:Handshake"
 logger = logging.getLogger(__name__)
+
+# as a convention: client will acknowledge every ACTION
+HANDSHAKE_ACKNOWLEGED = "acknowledged"
 
 
 class HandshakeBaseError(RuntimeError):
@@ -147,11 +149,11 @@ class HandshakeServer(HandshakeBase):
         self.pv = self.newPvaObject()
         self.counter = 0
 
-        print(f"Starting PVA server: {self.pvname}")  # TODO: remove for production
+        # print(f"Starting PVA server: {self.pvname}")  # remove for production
         logger.info("Starting PVA server: %s", self.pvname)
         self.server = pva.PvaServer(self.pvname, self.pv)
         self.server.start()
-        
+
         self.channel = pva.Channel(self.pvname)
 
     def stop(self):
@@ -240,6 +242,7 @@ class HandshakeListener(HandshakeBase):
     _pvname = None
     channel = None
     user_function = None
+    _acknowledged = False
 
     def __init__(self, pvname=None) -> None:
         self.pvname = pvname or DEFAULT_CHANNEL
@@ -252,7 +255,7 @@ class HandshakeListener(HandshakeBase):
         if self.running:
             raise HandshakeListenerError(f"PVA Listener already running: {self}.")
         self.channel = pva.Channel(self.pvname)
-        self.channel.subscribe("monitor", self.monitor)
+        self.channel.subscribe("monitor", self.pvmonitor)
         self.channel.startMonitor()
 
     def stop(self):
@@ -287,13 +290,16 @@ class HandshakeListener(HandshakeBase):
         """Return the unique identifier from the PVA object."""
         return pv_object["uid"]
 
-    def monitor(self, pv_object):
+    def pvmonitor(self, pv_object):
         """Called when there is new PVA content."""
         dictionary = self.getDictionary(pv_object)
         index_ = self.getIndex(pv_object)
         uid = self.getUid(pv_object)
         dt = self.getDatetime(pv_object)
         logger.debug("%s: #{index_}, uid=%s, %s", dt, index_, uid, dictionary)
+
+        if dictionary.get("response") == HANDSHAKE_ACKNOWLEGED:
+            self.acknowledge_action()
 
         if self.user_function is not None:
             self.user_function(index_, uid, dt, dictionary)
@@ -315,6 +321,46 @@ class HandshakeListener(HandshakeBase):
         pvobject["timeStamp.nanoseconds"] = nanos
 
         channel.put(pvobject)
+
+    def put_and_wait(self, listener, dictionary, timeout=5, attempts=1, **kwargs):
+        """
+        Publish new dictionary content and wait for acknowledgment by client.
+
+        EXAMPLE::
+
+            def pva_monitor(index_, uid, dt, dictionary):
+                '''Respond to PVA monitors.'''
+                report(f"{HEADING}.pva_monitor", f"#{index_} {dt} {uid[:7]}  {dictionary=}")
+        """
+        self.acknowledge_action(False)
+
+        # add the timeout value
+        dictionary["timeout"] = timeout
+        listener.put(dictionary, **kwargs)
+
+        # wait for success or timeout
+        # The _acknowledgment_ is set by the pvmonitor process
+        # which is a HANDSHAKE_ACKNOWLEGED message returned by the client.
+        for attempt in attempts:
+            deadline = time.time() + timeout
+            while time.time() < deadline:
+                if self.acknowledgment_received:
+                    return
+                time.sleep(0.1)
+        raise TimeoutError(f"No acknowledgement after {attempts=} with {timeout=} s.")
+
+    def acknowledge_action(self, success=True):
+        """Listener reported that the action was received (or not)."""
+        self.acknowledged = success == True
+
+    @property
+    def acknowledged(self):
+        return self._acknowledged
+
+    @acknowledged.setter
+    def acknowledged(self, value):
+        self._acknowledged = value
+
 
 class MyServer(HandshakeServer):
     """
