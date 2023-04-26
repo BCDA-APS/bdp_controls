@@ -32,7 +32,7 @@ def responder(index_, uid, dt, dictionary):
     global ACK_RECEIVED
 
     report("<<<   ", f"#{index_} {dt} {uid[:7]}  {dictionary=}")
-    if dictionary.get("response") == HANDSHAKE_ACKNOWLEGED:
+    if dictionary.get("response") == bdp_handshake.HANDSHAKE_ACKNOWLEGED:
         ACK_RECEIVED = True
 
 
@@ -45,6 +45,19 @@ def wait_for_acknowledge(timeout=5):
     raise TimeoutError("No acknowledgement in {timeout} s.")
 
 
+def data_acquisition(agent):
+    publishRequestAndWait(
+        agent,
+        ACTION_COMPUTE_STATISTICS,
+        data=[
+            [0, 0.000_1],
+            [1, 1],
+            [2, 2],
+        ],
+    )
+
+    publishRequestAndWait(agent, ACTION_COMPUTE_STATISTICS, data="data_file.hdf5")
+
 def main(duration=60):
     global ACK_RECEIVED
 
@@ -55,29 +68,17 @@ def main(duration=60):
     # ask processing to create a PVA, random name
     processing_pv = f"{PVA_PREFIX}{str(uuid.uuid4())[:7]}"
 
-    listener = bdp_handshake.HandshakeListener(processing_pv)
-    listener.user_function = responder
-    listener.start()
-    report(HEADING, f"{listener=} started")
+    remote_ioc = bdp_handshake.HandshakeListener(processing_pv)
+    remote_ioc.user_function = responder
+    remote_ioc.start()
+    report(HEADING, f"{remote_ioc=} started")
 
     publishRequestAndWait(server, ACTION_START_SERVER, pvname=processing_pv)
-
-    publishRequestAndWait(
-        server,
-        ACTION_COMPUTE_STATISTICS,
-        data=[
-            [0, 0.000_1],
-            [1, 1],
-            [2, 2],
-        ],
-    )
-
-    publishRequestAndWait(server, ACTION_COMPUTE_STATISTICS, data="data_file.hdf5")
-
+    data_acquisition(server)
     publishRequestAndWait(server, ACTION_STOP_SERVER)
 
-    listener.stop()
-    report(HEADING, f"{listener=} stopped")
+    remote_ioc.stop()
+    report(HEADING, f"{remote_ioc=} stopped")
 
     server.stop()
     report(HEADING, f"{server=} stopped")

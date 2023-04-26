@@ -69,6 +69,8 @@ class HandshakeServerError(RuntimeError):
 class HandshakeBase:
     """Structure of the PVA object."""
 
+    _acknowledged = False
+
     def newPvaObject(self):
         """
         Create a new PVA object.
@@ -93,10 +95,22 @@ class HandshakeBase:
         """Transform string back into a dictionary."""
         return json.loads(content)
 
+    def acknowledge_action(self, success=True):
+        """
+        Listener reported that the action was received (or not).
+
+        The ``acknowledged`` property is set by the pvmonitor process
+        when a HANDSHAKE_ACKNOWLEGED message is returned by the client.
+        """
+        self.acknowledged = success == True
+
     @property
-    def running(self):
-        """Redefine in both Server and Listener subclasses."""
-        return False  # Cannot "run" the base class.
+    def acknowledged(self):
+        return self._acknowledged
+
+    @acknowledged.setter
+    def acknowledged(self, value):
+        self._acknowledged = value
 
     @property
     def pvname(self):
@@ -107,6 +121,11 @@ class HandshakeBase:
         if self.running:
             raise HandshakeBaseError("Cannot change pvname: {self.pvname}")
         self._pvname = value
+
+    @property
+    def running(self):
+        """Redefine in both Server and Listener subclasses."""
+        return False  # Cannot "run" the base class.
 
 
 class HandshakeServer(HandshakeBase):
@@ -132,7 +151,6 @@ class HandshakeServer(HandshakeBase):
     _pvname = None
     pv = None
     channel = None
-    counter = None
     server = None
 
     def __init__(self, pvname=None) -> None:
@@ -147,7 +165,6 @@ class HandshakeServer(HandshakeBase):
             raise HandshakeServerError(f"PVA server already running: {self.server}")
 
         self.pv = self.newPvaObject()
-        self.counter = 0
 
         # print(f"Starting PVA server: {self.pvname}")  # remove for production
         logger.info("Starting PVA server: %s", self.pvname)
@@ -190,11 +207,10 @@ class HandshakeServer(HandshakeBase):
         if self.server is None:
             raise HandshakeServerError("PVA server is not running.")
 
-        self.counter += 1
-        now = time.time()
-        secondsPastEpoch = int(now)
-        nanoseconds = int((now - secondsPastEpoch) * 1e9)
         dictionary.update(**kwargs)
+        now = time.time()
+        seconds = int(now)
+        nanos = int((now - seconds) * 1e9)
 
         # Write new content to a local PVA object.
         # pv = self.newPvaObject()
@@ -202,13 +218,42 @@ class HandshakeServer(HandshakeBase):
         pv["dictionary"] = self.marshall(dictionary or {})
         pv["index"] += 1
         pv["uid"] = str(uuid.uuid4())
-        pv["timeStamp.secondsPastEpoch"] = secondsPastEpoch
-        pv["timeStamp.nanoseconds"] = nanoseconds
+        pv["timeStamp.secondsPastEpoch"] = seconds
+        pv["timeStamp.nanoseconds"] = nanos
 
         logger.debug("new PVA content #%d, uid=%s", pv["index"], pv["uid"])
 
         # Publish the new content from the local PVA object.
         self.server.update(pv)
+
+    def put_and_wait(self, dictionary, timeout=5, attempts=1, **kwargs):
+        """
+        Publish new dictionary content and wait for acknowledgment by client.
+
+        EXAMPLE::
+
+            def pva_monitor(index_, uid, dt, dictionary):
+                '''Respond to PVA monitors.'''
+                report(f"{HEADING}.pva_monitor", f"#{index_} {dt} {uid[:7]}  {dictionary=}")
+        """
+        self.acknowledge_action(False)
+
+        # add the timeout value
+        dictionary["timeout"] = timeout
+        self.put(dictionary, **kwargs)
+
+        # wait for success or timeout
+        for attempt in range(attempts):
+            deadline = time.time() + timeout
+            while time.time() < deadline:
+                if self.acknowledged:
+                    return
+                time.sleep(0.1)
+            logger.debug("Timeout after attempt %s of %s", attempt, attempts)
+        raise TimeoutError(
+            f"No acknowledgement after {attempts} attempts"
+            f", each with {timeout} s timeout."
+        )
 
     @property
     def connected(self):
@@ -254,7 +299,6 @@ class HandshakeListener(HandshakeBase):
     _pvname = None
     channel = None
     user_function = None
-    _acknowledged = False
 
     def __init__(self, pvname=None) -> None:
         self.pvname = pvname or DEFAULT_CHANNEL
@@ -369,23 +413,6 @@ class HandshakeListener(HandshakeBase):
             f"No acknowledgement after {attempts} attempts"
             f", each with {timeout} s timeout."
         )
-
-    def acknowledge_action(self, success=True):
-        """
-        Listener reported that the action was received (or not).
-
-        The ``acknowledged`` property is set by the pvmonitor process
-        when a HANDSHAKE_ACKNOWLEGED message is returned by the client.
-        """
-        self.acknowledged = success == True
-
-    @property
-    def acknowledged(self):
-        return self._acknowledged
-
-    @acknowledged.setter
-    def acknowledged(self, value):
-        self._acknowledged = value
 
     @property
     def connected(self):

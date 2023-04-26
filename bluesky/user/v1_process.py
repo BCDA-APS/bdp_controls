@@ -59,7 +59,7 @@ class Manager:
 
     def acknowledge(self, action, **kwargs):
         message = dict(
-            response=HANDSHAKE_ACKNOWLEGED,
+            response=bdp_handshake.HANDSHAKE_ACKNOWLEGED,
             request=action,
         )
         message.update(**kwargs)
