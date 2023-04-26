@@ -37,6 +37,7 @@ def build_server(heading, timeout=10):
 
 def build_listener(heading, callback=None, timeout=10):
     from bdp_handshake import HandshakeListener
+
     agent = HandshakeListener(ACQUISITION_PV)
     if callback is not None:
         agent.user_function = callback

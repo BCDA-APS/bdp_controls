@@ -219,7 +219,7 @@ class HandshakeServer(HandshakeBase):
         while time.time() <= deadline:
             if self.connected:
                 return
-            time.sleep(timeout/30)
+            time.sleep(timeout / 30)
         raise TimeoutError(f"{self}: TimeoutError after {timeout} s.")
 
 
@@ -336,7 +336,7 @@ class HandshakeListener(HandshakeBase):
         pvobject["uid"] = str(uuid.uuid4())
         pvobject["timeStamp.secondsPastEpoch"] = seconds
         pvobject["timeStamp.nanoseconds"] = nanos
-        
+
         # print(f"{pvobject=}  {channel.isConnected()=}")
 
         channel.put(pvobject)
@@ -396,7 +396,7 @@ class HandshakeListener(HandshakeBase):
         while time.time() <= deadline:
             if self.connected:
                 return
-            time.sleep(timeout/30)
+            time.sleep(timeout / 30)
         raise TimeoutError(f"{self}: TimeoutError after {timeout} s.")
 
 

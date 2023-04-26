@@ -3,9 +3,13 @@
 import pathlib
 import time
 
-
 from bdp_handshake import HandshakeListener, HandshakeServer
-from handshake_common import ACTION_COMPUTE_STATISTICS, ACTION_REQUEST_ACKNOWLEDGEMENT, ACQUISITION_PV, report
+from handshake_common import (
+    ACQUISITION_PV,
+    ACTION_COMPUTE_STATISTICS,
+    ACTION_REQUEST_ACKNOWLEDGEMENT,
+    report,
+)
 
 CATALOG = "training"
 TEST_RUNS = "897c b4216 589cc".split()
@@ -45,7 +49,6 @@ def v2_data_acquisition_as_server():
             scan_id=run.metadata["start"]["scan_id"],
             plan_name=run.metadata["start"]["plan_name"],
             uid=run.name,
-
             # Not the best way to communicate data, but it's a start.  This data is small.
             x=ds["m1"].values.tolist(),
             y=ds["noisy"].values.tolist(),
@@ -91,7 +94,7 @@ def data_acquisition(listener):
 
 
 def simpler(duration=120):
-    from handshake_common import start_server, start_listener
+    from handshake_common import start_listener, start_server
 
     def pv_monitor(index_, uid, dt, dictionary):
         report(f"{HEADING}.pva_monitor", f"#{index_} {dt} {uid[:7]}  {dictionary=}")
@@ -119,7 +122,7 @@ def simpler(duration=120):
         listener.put(
             dict(
                 comment=f"{HEADING} waiting...",
-                remaining=round(deadline-time.time(), 1)
+                remaining=round(deadline - time.time(), 1),
             )
         )
 

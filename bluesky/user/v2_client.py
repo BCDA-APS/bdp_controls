@@ -2,10 +2,15 @@
 
 import pathlib
 import time
-from bdp_handshake import HandshakeListener
-from handshake_common import ACTION_COMPUTE_STATISTICS, report, ACQUISITION_PV, HANDSHAKE_ACKNOWLEGED
-import pysumreg
 
+import pysumreg
+from bdp_handshake import HandshakeListener
+from handshake_common import (
+    ACQUISITION_PV,
+    ACTION_COMPUTE_STATISTICS,
+    HANDSHAKE_ACKNOWLEGED,
+    report,
+)
 
 HEADING = pathlib.Path(__file__).name
 
@@ -13,7 +18,7 @@ HEADING = pathlib.Path(__file__).name
 def analysis(xarr, yarr):
     sr = pysumreg.SummationRegisters()
     for x, y in zip(xarr, yarr):
-        sr.add(x,y)
+        sr.add(x, y)
     return sr.to_dict()
 
 
@@ -39,7 +44,6 @@ def v2_data_analysis_as_client(duration=30):
     #         stats = analysis(dictionary["x"], dictionary["y"])
     #         listener.put(dict(data_uid=uid, stats=stats))
     #         print("responded with results")
-
 
     listener.user_function = pva_monitor
     listener.start()
@@ -102,6 +106,7 @@ class Manager:
 
     def __init__(self, timeout=30):
         from handshake_common import start_listener
+
         self.listener = start_listener(HEADING, timeout=timeout)
         self.listener.user_function = self.pv_monitor
 
@@ -128,6 +133,7 @@ class Manager:
             self.listener.put(self.results)
             print("after")
             self.results = None
+
 
 def main(duration=20):
     # v2_data_analysis_as_client()
