@@ -70,6 +70,7 @@ class HandshakeBase:
     """Structure of the PVA object."""
 
     _acknowledged = False
+    _pvname = None
 
     def newPvaObject(self):
         """
@@ -148,7 +149,6 @@ class HandshakeServer(HandshakeBase):
         server.stop()
     """
 
-    _pvname = None
     pv = None
     channel = None
     server = None
@@ -296,7 +296,6 @@ class HandshakeListener(HandshakeBase):
 
     """
 
-    _pvname = None
     channel = None
     user_function = None
 
