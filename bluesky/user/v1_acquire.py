@@ -15,7 +15,7 @@ ACK_RECEIVED = False
 
 def publish(server, dictionary, **kwargs):
     dictionary.update(**kwargs)
-    server.publishDictionary(dictionary)
+    server.put(dictionary)
     report(">>>   ", f"{server=} published {dictionary=}")
 
 
