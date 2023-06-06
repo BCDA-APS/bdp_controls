@@ -9,6 +9,7 @@ from .._iconfig_dict import iconfig
 # define the devices
 from .aps_source import *
 from .calculation_records import *
+from .data_management import *
 from .feedback_api import *
 from .ioc_stats import *
 from .samplexy_stage import *
