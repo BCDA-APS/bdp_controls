@@ -172,6 +172,8 @@ def m14_simulated_xrf(
         logger.info("Bluesky plan m14_simulated_xrf() complete. %s", dm_workflow)
 
         yield from wait_workflows()
+        for wf in wf_cache.values():
+            wf._update_processing_data()
         print_cache_summary()
 
     @bpp.run_decorator(md=_md)
