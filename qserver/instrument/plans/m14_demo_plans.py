@@ -66,7 +66,7 @@ from bluesky import plan_stubs as bps
 from bluesky import preprocessors as bpp
 
 from .. import iconfig
-from ..devices.data_management import dm_workflow, DM_WorkflowConnector
+from ..devices.data_management import DM_WorkflowConnector, DM_STATION_NAME
 
 SECOND = 1
 MINUTE = 60 * SECOND
@@ -79,7 +79,8 @@ MDA_FILE_PREFIX = "2xfm"
 DM_WORKFLOW_NAME = "xrf"
 DEFAULT_FLY_SCAN_TIME = MINUTE
 DM_FILE_PATH = str(XRF_PATH)
-dm_workflow.workflow.put(DM_WORKFLOW_NAME)
+WAIT_FOR_PREVIOUS_WORKFLOW = True
+MAX_NUMBER_OF_MDA_FILES = 82
 
 
 def m14_simulated_xrf(
@@ -109,7 +110,7 @@ def m14_simulated_xrf(
         workflow=workflow,
         datetime=str(datetime.datetime.now()),
         data_management=dict(
-            owner=dm_workflow.owner.get(),
+            owner=DM_STATION_NAME,
             workflow=workflow,
             filePath=filePath,
             concise=dm_concise,
@@ -125,7 +126,7 @@ def m14_simulated_xrf(
         f" {md=} s"
     )
 
-    def collect_data(max_num=5):
+    def get_mda_file(max_num=999_999):
         for index_, child in enumerate(sorted(MDA_PATH.iterdir())):
             if (
                 child.is_file()
@@ -135,42 +136,51 @@ def m14_simulated_xrf(
             ):
                 yield child
 
-    @bpp.run_decorator(md=_md)
-    def _inner():
-        for mda_file in collect_data(max_num=5):
-            logger.info("Simulated data collection for %s s.", fly_scan_time)
-            yield from bps.sleep(fly_scan_time)
-            print(f"{mda_file=}")
-            logger.info("Data file: %s", mda_file.name)
+    wf_cache = []
 
-            # sim = make_dict_device(dict(x=1, y=2), name="sim")
-            # for x, y in [
-            #     [1, 2],
-            #     [2, 73],
-            #     [3, 119],
-            #     [4, 13],
-            # ]:
-            #     # add the simulated data, point by point, as usual
-            #     yield from bps.mv(sim.x, x, sim.y, y)
-            #     yield from write_stream(sim, "primary")
-
-            # TODO: wait if previous workflow still executing
-            logger.info(f"Start DM workflow: {workflow=}")
-            yield from bps.mv(dm_workflow.concise_reporting, dm_concise)
-            yield from dm_workflow.run_as_plan(
-                workflow,
-                # str(mda_file),
-                wait=dm_wait,  # TODO:
-                timeout=dm_timeout,
-                # all kwargs after this line are DM argsDict content
-                # filePath=filePath,
-                filePath=str(mda_file),
-                outputDataDir=str(XRF_PATH / "output"),
-                # TODO: numFramesExpected=something,
-                # time acq started
-                # time acq ended
-            )
-            yield from write_stream([dm_workflow], "dm_workflow")
+    def collect_full_series():
+        logger.info("Bluesky plan m14_simulated_xrf() starting.")
+        for mda_file in get_mda_file(max_num=MAX_NUMBER_OF_MDA_FILES):
+            _md["MDA_file"] = str(mda_file)
+            # TODO: numFilesExpected=something,
+            # time acq started
+            # time acq ended
+            dm_workflow = DM_WorkflowConnector(name="dm_workflow", labels=["DM"])
+            try:
+                yield from collect_one(
+                    mda_file, dm_workflow, wait_previous_wf=WAIT_FOR_PREVIOUS_WORKFLOW
+                )
+            except TimeoutError as exc_:
+                logger.error("MDA: %s, error: %s", str(mda_file), exc_)
         logger.info("Bluesky plan m14_simulated_xrf() complete. %s", dm_workflow)
 
-    yield from _inner()
+    @bpp.run_decorator(md=_md)
+    def collect_one(mda_file, dm_workflow, wait_previous_wf=True):
+        logger.info("Simulated data collection for %s s.", fly_scan_time)
+        yield from bps.sleep(fly_scan_time)
+        print(f"Collected: {mda_file=}")
+        logger.info("Data file: %s", mda_file.name)
+
+        if wait_previous_wf and len(wf_cache) > 0:
+            # wait if previous workflow still executing
+            wf = wf_cache[-1]
+            while not wf.idle:
+                print(f"Waiting for {wf=}")
+                if wf.status.get() in "failed timeout".split():
+                    break
+                yield from bps.sleep(10)  # TODO: use a symbol
+
+        logger.info(f"Start DM workflow: {workflow=}")
+        wf_cache.append(dm_workflow)
+        yield from bps.mv(dm_workflow.concise_reporting, dm_concise)
+        yield from dm_workflow.run_as_plan(
+            workflow,
+            wait=dm_wait,  # TODO:
+            timeout=dm_timeout,
+            # all kwargs after this line are DM argsDict content
+            filePath=str(mda_file),
+            outputDataDir=str(XRF_PATH / "output"),
+        )
+        yield from write_stream([dm_workflow], "dm_workflow")
+
+    yield from collect_full_series()

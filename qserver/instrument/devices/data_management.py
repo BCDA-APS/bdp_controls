@@ -162,8 +162,8 @@ class DM_WorkflowConnector(Device):
 
         wfargs = self.workflow_args.copy()
         wfargs.update(kwargs)
-        t0 = time.time()
-        self._report_deadline = t0
+        self.start_time = time.time()
+        self._report_deadline = self.start_time
 
         def update_report_deadline(catch_up=False):
             period = max(self.reporting_period.get(), REPORT_PERIOD_MIN)
@@ -177,7 +177,7 @@ class DM_WorkflowConnector(Device):
 
         def _reporter(*args, **kwargs):
             update_report_deadline(catch_up=False)
-            self.report_status(t_offset=t0)
+            self.report_status(t_offset=self.start_time)
 
         def _cleanup():
             """Call when DM workflow finishes."""
@@ -210,15 +210,18 @@ class DM_WorkflowConnector(Device):
             logger.info("Final workflow status: %s", self.status.get())
             if self.status.get() in "done failed".split():
                 logger.info(f"{self}")
-                self.report_status()
+                self.report_status(self.start_time)
                 return
             self.status.put("timeout")
             logger.info(f"{self}")
             # fmt: off
-            raise TimeoutError(
-                f"Workflow {self.workflow.get()!r}"
-                f" did not finish in {timeout} s."
+            logger.error(
+                "Workflow %s timeout in %s s.", repr(self.workflow.get()), timeout
             )
+            # raise TimeoutError(
+            #     f"Workflow {self.workflow.get()!r}"
+            #     f" did not finish in {timeout} s."
+            # )
             # fmt: on
 
         self.job = None
@@ -289,8 +292,9 @@ class DM_WorkflowConnector(Device):
                 table.addRow(row)
         logger.info(
             f"{wf['description']!r}"
-            f" {wf['name']!r}"
-            f" {self.job['id'][:8]!r}"
+            f" workflow={wf['name']!r}"
+            f" id={self.job['id'][:8]!r}"
+            f" elapsed={time.time()-self.start_time:.1f}s"
             f"\n{self!r}"
             f"\n{table}"
         )
