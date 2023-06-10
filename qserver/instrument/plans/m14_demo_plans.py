@@ -64,6 +64,7 @@ from apstools.plans import write_stream
 # from bluesky import plans as bp
 from bluesky import plan_stubs as bps
 from bluesky import preprocessors as bpp
+import pyRestTable
 
 from .. import iconfig
 from ..devices.data_management import DM_WorkflowConnector, DM_STATION_NAME
@@ -79,8 +80,8 @@ MDA_FILE_PREFIX = "2xfm"
 DM_WORKFLOW_NAME = "xrf"
 DEFAULT_FLY_SCAN_TIME = MINUTE
 DM_FILE_PATH = str(XRF_PATH)
-WAIT_FOR_PREVIOUS_WORKFLOW = True
-MAX_NUMBER_OF_MDA_FILES = 82
+WAIT_FOR_PREVIOUS_WORKFLOWS = True
+MAX_NUMBER_OF_MDA_FILES = 3
 
 
 def m14_simulated_xrf(
@@ -136,42 +137,54 @@ def m14_simulated_xrf(
             ):
                 yield child
 
-    wf_cache = []
+    wf_cache = {}
+
+    def print_cache_summary(title="Summary"):
+        table = pyRestTable.Table()
+        table.labels = "# MDA status id".split()
+        for i, k in enumerate(wf_cache, start=1):
+            v = wf_cache[k]
+            table.addRow((i, k, v.status.get(), v.job_id.get()))
+        print(f"\n{title}\n{table}")
+
+    def wait_workflows(period=10):
+        print("DEBUG: wait_workflows()")
+        if WAIT_FOR_PREVIOUS_WORKFLOWS:
+            print("Waiting for all previous workflows to finish...")
+            for workflow in wf_cache.values():
+                # wait for each workflow to end
+                while workflow.status.get() not in "done failed timeout".split():
+                    print(f"Waiting for {workflow=}")
+                    yield from bps.sleep(period)
 
     def collect_full_series():
         logger.info("Bluesky plan m14_simulated_xrf() starting.")
-        for mda_file in get_mda_file(max_num=MAX_NUMBER_OF_MDA_FILES):
+        for i, mda_file in enumerate(get_mda_file(max_num=MAX_NUMBER_OF_MDA_FILES)):
             _md["MDA_file"] = str(mda_file)
             # TODO: numFilesExpected=something,
             # time acq started
             # time acq ended
-            dm_workflow = DM_WorkflowConnector(name="dm_workflow", labels=["DM"])
+            dm_workflow = DM_WorkflowConnector(name=f"dmwf_{i}", labels=["DM"])
             try:
-                yield from collect_one(
-                    mda_file, dm_workflow, wait_previous_wf=WAIT_FOR_PREVIOUS_WORKFLOW
-                )
+                yield from collect_one(mda_file, dm_workflow)
             except TimeoutError as exc_:
                 logger.error("MDA: %s, error: %s", str(mda_file), exc_)
         logger.info("Bluesky plan m14_simulated_xrf() complete. %s", dm_workflow)
 
+        yield from wait_workflows()
+        print_cache_summary()
+
     @bpp.run_decorator(md=_md)
-    def collect_one(mda_file, dm_workflow, wait_previous_wf=True):
+    def collect_one(mda_file, dm_workflow):
         logger.info("Simulated data collection for %s s.", fly_scan_time)
         yield from bps.sleep(fly_scan_time)
         print(f"Collected: {mda_file=}")
         logger.info("Data file: %s", mda_file.name)
 
-        if wait_previous_wf and len(wf_cache) > 0:
-            # wait if previous workflow still executing
-            wf = wf_cache[-1]
-            while not wf.idle:
-                print(f"Waiting for {wf=}")
-                if wf.status.get() in "failed timeout".split():
-                    break
-                yield from bps.sleep(10)  # TODO: use a symbol
+        yield from wait_workflows()
 
         logger.info(f"Start DM workflow: {workflow=}")
-        wf_cache.append(dm_workflow)
+        wf_cache[mda_file.name] = dm_workflow
         yield from bps.mv(dm_workflow.concise_reporting, dm_concise)
         yield from dm_workflow.run_as_plan(
             workflow,
