@@ -16,12 +16,13 @@ import time
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)  # allow any log content at this level
 logger.info(__file__)
+print(__file__)
 
 from apstools.utils import run_in_thread
 from dm import ProcApiFactory
 from ophyd import Component, Device, Signal
 
-DM_STATION_NAME = str(os.environ["DM_STATION_NAME"]).lower()
+DM_STATION_NAME = str(os.environ.get("DM_STATION_NAME", "terrier")).lower()
 NOT_AVAILABLE = "-n/a-"
 NOT_RUN_YET = "not_run"
 REPORT_PERIOD_DEFAULT = 10
@@ -187,7 +188,9 @@ class DM_WorkflowConnector(Device):
 
         @run_in_thread
         def _run_DM_workflow_thread():
-            logger.info(f"run DM workflow: {self.workflow.get()}")
+            logger.info(
+                "run DM workflow: %s with timeout=%s s", self.workflow.get(), timeout
+            )
             self.job = self.api.startProcessingJob(
                 workflowOwner=self.owner.get(),
                 workflowName=workflow,
@@ -197,21 +200,26 @@ class DM_WorkflowConnector(Device):
             logger.info(f"DM workflow started: {self}")
             # wait for workflow to finish
             deadline = time.time() + timeout
-            while time.time() < deadline and self.status.get() not in ("done"):
+            while time.time() < deadline and self.status.get() not in "done failed timeout".split():
                 self._update_processing_data()
-                if time.time() >= self._report_deadline:
+                if "_report_deadline" not in dir(self) or time.time() >= self._report_deadline:
                     _reporter()
                 time.sleep(self.polling_period.get())
 
             _cleanup()
-            if self.status.get() in ("done"):
+            logger.info("Final workflow status: %s", self.status.get())
+            if self.status.get() in "done failed".split():
                 logger.info(f"{self}")
+                self.report_status()
                 return
             self.status.put("timeout")
             logger.info(f"{self}")
+            # fmt: off
             raise TimeoutError(
-                f"Workflow {self.workflow.get()!r}" f" did not finish in {timeout} s."
+                f"Workflow {self.workflow.get()!r}"
+                f" did not finish in {timeout} s."
             )
+            # fmt: on
 
         self.job = None
         self.stage_id.put(NOT_RUN_YET)

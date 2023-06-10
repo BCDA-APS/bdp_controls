@@ -6,15 +6,17 @@ print(__file__)
 
 from .._iconfig_dict import iconfig
 
+print(f"{iconfig.get('BDP_DEMO')}")
 # define the devices
-from .aps_source import *
-from .calculation_records import *
-from .data_management import *
-from .feedback_api import *
-from .ioc_stats import *
-from .samplexy_stage import *
-from .simulated_beam import *
-from .simulated_shutter import *
+if iconfig.get("BDP_DEMO") != "M14":
+    from .aps_source import *
+    from .calculation_records import *
+    from .data_management import *
+    from .feedback_api import *
+    from .ioc_stats import *
+    from .samplexy_stage import *
+    from .simulated_beam import *
+    from .simulated_shutter import *
 
 # area detectors come after previous devices are defined
 
@@ -23,8 +25,7 @@ if iconfig.get("BDP_DEMO") == "M4":
     from .ad_sim import *
 elif iconfig.get("BDP_DEMO") == "M9":
     from .m9_devices import m9_flyer
-else:
-    # M6 demo
+elif iconfig.get("BDP_DEMO") == "M6":
     from .image_file_signal import *
     from .ad_pva import *
 

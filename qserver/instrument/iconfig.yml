@@ -55,9 +55,13 @@ IMAGE_RUN_XREF_FILE: xref_image_run.yml
 # permissions
 ALLOW_AREA_DETECTOR_WARMUP: true
 ENABLE_AREA_DETECTOR_IMAGE_PLUGIN: true
-APS_IN_BASELINE: true
+APS_IN_BASELINE: false
 ENABLE_CALCS: true
 USE_PROGRESS_BAR: false
+WRITE_SPEC_DATA_FILES: false
+
+# APS Data Management
+DM_SETUP_FILE: "/clhome/BDP/DM/etc/dm.setup.sh"
 
 # ----------------------------------
 

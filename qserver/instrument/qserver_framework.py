@@ -17,6 +17,8 @@ print(__file__)
 from . import iconfig
 from .epics_signal_config import epics_scan_id_source
 from .epics_signal_config import scan_id_epics
+from .dm_setup import BDP_WORKFLOW_OWNER
+
 import apstools
 import bluesky
 import bluesky_queueserver

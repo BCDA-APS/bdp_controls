@@ -63,29 +63,33 @@ from apstools.devices import make_dict_device
 from apstools.plans import write_stream
 # from bluesky import plans as bp
 from bluesky import plan_stubs as bps
+from bluesky import preprocessors as bpp
 
 from .. import iconfig
-from ..devices import dm_workflow
+from ..devices.data_management import dm_workflow, DM_WorkflowConnector
 
 SECOND = 1
 MINUTE = 60 * SECOND
 
 TITLE = "Simulate XRF data collection and processing"
 VOYAGER = pathlib.Path().home() / "voyager"
-XRF_DATA = VOYAGER / "BDP" / "XRF-demo"
-DM_WORKFLOW_NAME = "does_not_exist"
+XRF_PATH = VOYAGER / "BDP" / "XRF-demo"
+MDA_PATH = XRF_PATH / "mda"
+MDA_FILE_PREFIX = "2xfm"
+DM_WORKFLOW_NAME = "xrf"
 DEFAULT_FLY_SCAN_TIME = MINUTE
-DM_FILE_PATH = str(XRF_DATA)
+DM_FILE_PATH = str(XRF_PATH)
+dm_workflow.workflow.put(DM_WORKFLOW_NAME)
 
 
 def m14_simulated_xrf(
-    image_dir=DM_FILE_PATH,
-    dm_workflow=DM_WORKFLOW_NAME,
+    sample=MDA_FILE_PREFIX,
+    filePath=DM_FILE_PATH,
+    workflow=DM_WORKFLOW_NAME,
     fly_scan_time=DEFAULT_FLY_SCAN_TIME,
-    dm_filePath=DM_FILE_PATH,
     dm_timeout=3 * MINUTE,
     dm_wait=True,
-    dm_concise=True,
+    dm_concise=False,
     md={},
 ):
     """
@@ -95,20 +99,19 @@ def m14_simulated_xrf(
     """
     # TODO: start DM workflow for each "line" of collected data (needs params)
 
-    image_path = pathlib.Path(image_dir)
+    image_path = pathlib.Path(filePath)
     _md = dict(
         title=TITLE,
         description=(
             "Simulate fly scan acquisition of a set"
             " of image files and start DM workflow."
         ),
-        dm_workflow=dm_workflow,
+        workflow=workflow,
         datetime=str(datetime.datetime.now()),
         data_management=dict(
             owner=dm_workflow.owner.get(),
-            workflow=dm_workflow,
-            filePath=dm_filePath,
-            image_directory=image_dir,
+            workflow=workflow,
+            filePath=filePath,
             concise=dm_concise,
         ),
     )
@@ -116,11 +119,58 @@ def m14_simulated_xrf(
 
     logger.info(
         "In m14_simulated_xrf() plan."
-        f"  {image_dir=}"
+        f"  {filePath=}"
         f" (exists: {image_path.exists()})"
         f" {fly_scan_time=} s"
         f" {md=} s"
     )
 
-    # TODO: "collect" data
-    yield from bps.null()
+    def collect_data(max_num=5):
+        for index_, child in enumerate(sorted(MDA_PATH.iterdir())):
+            if (
+                child.is_file()
+                and child.name.startswith(f"{sample}_")
+                and child.suffix == ".mda"
+                and index_ < max_num
+            ):
+                yield child
+
+    @bpp.run_decorator(md=_md)
+    def _inner():
+        for mda_file in collect_data(max_num=5):
+            logger.info("Simulated data collection for %s s.", fly_scan_time)
+            yield from bps.sleep(fly_scan_time)
+            print(f"{mda_file=}")
+            logger.info("Data file: %s", mda_file.name)
+
+            # sim = make_dict_device(dict(x=1, y=2), name="sim")
+            # for x, y in [
+            #     [1, 2],
+            #     [2, 73],
+            #     [3, 119],
+            #     [4, 13],
+            # ]:
+            #     # add the simulated data, point by point, as usual
+            #     yield from bps.mv(sim.x, x, sim.y, y)
+            #     yield from write_stream(sim, "primary")
+
+            # TODO: wait if previous workflow still executing
+            logger.info(f"Start DM workflow: {workflow=}")
+            yield from bps.mv(dm_workflow.concise_reporting, dm_concise)
+            yield from dm_workflow.run_as_plan(
+                workflow,
+                # str(mda_file),
+                wait=dm_wait,  # TODO:
+                timeout=dm_timeout,
+                # all kwargs after this line are DM argsDict content
+                # filePath=filePath,
+                filePath=str(mda_file),
+                outputDataDir=str(XRF_PATH / "output"),
+                # TODO: numFramesExpected=something,
+                # time acq started
+                # time acq ended
+            )
+            yield from write_stream([dm_workflow], "dm_workflow")
+        logger.info("Bluesky plan m14_simulated_xrf() complete. %s", dm_workflow)
+
+    yield from _inner()
