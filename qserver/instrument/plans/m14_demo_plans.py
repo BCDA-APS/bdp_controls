@@ -168,19 +168,19 @@ def m14_simulated_xrf(
 
     def print_cache_summary(title="Summary"):
         table = pyRestTable.Table()
-        table.labels = "# MDA status runTime submitted id".split()
+        table.labels = "# MDA status runTime started id".split()
         for i, k in enumerate(wf_cache, start=1):
             v = wf_cache[k]
             job_id = v.job_id.get()
-            submitted = datetime.datetime.fromtimestamp(v.start_time).isoformat(sep=" ")
+            started = datetime.datetime.fromtimestamp(v.start_time).isoformat(sep=" ")
             table.addRow(
                 (
                     i,
                     k,
                     v.status.get(),
                     v.run_time.get(),
-                    submitted,
-                    job_id,
+                    started,
+                    job_id[:7],
                 )
             )
         print(f"\n{title}\n{table}")
