@@ -81,7 +81,10 @@ DM_WORKFLOW_NAME = "xrf"
 DEFAULT_FLY_SCAN_TIME = MINUTE
 DM_FILE_PATH = str(XRF_PATH)
 WAIT_FOR_PREVIOUS_WORKFLOWS = True
-MAX_NUMBER_OF_MDA_FILES = 3
+# CHERRY_PICKED_DATA_WITH_SHORT_PROCESSING_TIMES
+CHERRY_PICKED_DATA = """
+    7    37    38    44   46    48    49
+""".split()
 
 
 def m14_simulated_xrf(
@@ -89,6 +92,7 @@ def m14_simulated_xrf(
     filePath=DM_FILE_PATH,
     workflow=DM_WORKFLOW_NAME,
     fly_scan_time=DEFAULT_FLY_SCAN_TIME,
+    choice_mda=-1,
     dm_timeout=3 * MINUTE,
     dm_wait=True,
     dm_concise=False,
@@ -109,6 +113,7 @@ def m14_simulated_xrf(
             " of image files and start DM workflow."
         ),
         workflow=workflow,
+        choice_mda=choice_mda,
         datetime=str(datetime.datetime.now()),
         data_management=dict(
             owner=DM_STATION_NAME,
@@ -127,30 +132,63 @@ def m14_simulated_xrf(
         f" {md=} s"
     )
 
-    def get_mda_file(max_num=999_999):
-        for index_, child in enumerate(sorted(MDA_PATH.iterdir())):
-            if (
-                child.is_file()
-                and child.name.startswith(f"{sample}_")
-                and child.suffix == ".mda"
-                and index_ < max_num
-            ):
+    def get_mda_file():
+        "Generate MDA file name(s) for processing."
+        suffix = ".mda"
+        # fmt: off
+        try:
+            if choice_mda > 0:
+                print(f"Choose one MDA file: #{choice_mda}")
+                file_list = [
+                    MDA_PATH / f"{sample}_{int(choice_mda):04d}{suffix}"
+                ]
+            else:
+                print(f"Choose cherry-picked MDA files: {CHERRY_PICKED_DATA}")
+                file_list = [
+                    MDA_PATH / f"{sample}_{int(item):04d}{suffix}"
+                    for item in CHERRY_PICKED_DATA
+                ]
+        except Exception as exc_:
+            print(f"Choose all available MDA files ({exc_=})")
+            file_list = [
+                child
+                for child in MDA_PATH.iterdir()
+                if (
+                    child.is_file()
+                    and child.name.startswith(f"{sample}_")
+                    and child.suffix == {suffix}
+                )
+            ]
+        # fmt: on
+        for child in sorted(file_list):
+            if child.exists():
                 yield child
 
     wf_cache = {}
 
     def print_cache_summary(title="Summary"):
         table = pyRestTable.Table()
-        table.labels = "# MDA status id".split()
+        table.labels = "# MDA status runTime submitted id".split()
         for i, k in enumerate(wf_cache, start=1):
             v = wf_cache[k]
-            table.addRow((i, k, v.status.get(), v.job_id.get()))
+            job_id = v.job_id.get()
+            submitted = datetime.datetime.fromtimestamp(v.start_time).isoformat(sep=" ")
+            table.addRow(
+                (
+                    i,
+                    k,
+                    v.status.get(),
+                    v.run_time.get(),
+                    submitted,
+                    job_id,
+                )
+            )
         print(f"\n{title}\n{table}")
 
     def wait_workflows(period=10):
         print("DEBUG: wait_workflows()")
         if WAIT_FOR_PREVIOUS_WORKFLOWS:
-            print("Waiting for all previous workflows to finish...")
+            print(f"Waiting for all previous workflows ({len(wf_cache)}) to finish...")
             for workflow in wf_cache.values():
                 # wait for each workflow to end
                 while workflow.status.get() not in "done failed timeout".split():
@@ -159,17 +197,16 @@ def m14_simulated_xrf(
 
     def collect_full_series():
         logger.info("Bluesky plan m14_simulated_xrf() starting.")
-        for i, mda_file in enumerate(get_mda_file(max_num=MAX_NUMBER_OF_MDA_FILES)):
-            _md["MDA_file"] = str(mda_file)
-            # TODO: numFilesExpected=something,
-            # time acq started
-            # time acq ended
+        for i, mda_file in enumerate(get_mda_file(), start=1):
+            _md["MDA_file"] = mda_file.name
             dm_workflow = DM_WorkflowConnector(name=f"dmwf_{i}", labels=["DM"])
             try:
                 yield from collect_one(mda_file, dm_workflow)
+                print(f"Completed {str(mda_file)}")
             except TimeoutError as exc_:
                 logger.error("MDA: %s, error: %s", str(mda_file), exc_)
-        logger.info("Bluesky plan m14_simulated_xrf() complete. %s", dm_workflow)
+            logger.info("Bluesky plan workflow complete. %s", dm_workflow)
+        logger.info("Bluesky plan m14_simulated_xrf() series complete.")
 
         yield from wait_workflows()
         for wf in wf_cache.values():
