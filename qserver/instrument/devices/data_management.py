@@ -103,6 +103,11 @@ class DM_WorkflowConnector(Device):
         if signal.get() != value:
             signal.put(value)
 
+    def getJob(self, job_id=None):
+        """Get the current processing job object."""
+        job_id = job_id or self.job_id.get()
+        return self.api.getProcessingJobById(self.owner.get(), job_id)
+
     def _update_processing_data(self):
         """
         Called periodically (while process runs) to update self.job.
@@ -112,8 +117,7 @@ class DM_WorkflowConnector(Device):
         if self.job_id.get() == NOT_RUN_YET:
             return
         # fmt: off
-        self.job = self.api.getProcessingJobById(
-            self.owner.get(), self.job_id.get())
+        self.job = self.getJob()
         # fmt: on
 
         rep = self.job.getDictRep()
