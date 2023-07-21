@@ -19,7 +19,7 @@ elif iconfig.get("BDP_DEMO") == "M9":
 elif iconfig.get("BDP_DEMO") == "M14":
     from .m14_demo_plans import m14_simulated_xrf
 elif iconfig.get("BDP_DEMO") == "M15":
-    from .m15_demo_plans import m15_simulated_ixn
+    from .m15_demo_plans import m15_simulated_isn
 else:
     from .m6_demo_plans import *
 

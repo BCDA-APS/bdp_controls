@@ -6,7 +6,7 @@ print(__file__)
 
 from .._iconfig_dict import iconfig
 
-print(f"{iconfig.get('BDP_DEMO')}")
+print(f"{iconfig.get('BDP_DEMO')=}")
 # define the devices
 if iconfig.get("BDP_DEMO") != "M14":
     from .aps_source import *

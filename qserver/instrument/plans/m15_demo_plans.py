@@ -1,5 +1,5 @@
 """
-IXN (tomocupy) demo for BDP Project Milestone M15
+ISN (tomocupy) demo for BDP Project Milestone M15
 
 DATA
 
@@ -23,7 +23,7 @@ PROCEDURE
 """
 
 __all__ = [
-    "m15_simulated_ixn",
+    "m15_simulated_isn",
 ]
 
 import logging
@@ -50,7 +50,7 @@ SECOND = 1
 MINUTE = 60 * SECOND
 DEFAULT_WAITING_TIME = 30 * MINUTE  # bluesky will raise TimeoutError if DM is not done
 
-TITLE = "Simulate IXN data collection and processing with tomocupy"
+TITLE = "Simulate ISN data collection and processing with tomocupy"
 DM_WORKFLOW_NAME = "tomocupy"
 DEFAULT_SIMULATED_ACQUISITION_TIME = 5 * SECOND
 WAIT_FOR_PREVIOUS_WORKFLOWS = False
@@ -62,7 +62,7 @@ TEST_FILE = DATA_PATH / "Sm_c_3t_7p5x_pink_a_010.h5"
 DM_FILE_PATH = str(TEST_FILE)
 
 
-def m15_simulated_ixn(
+def m15_simulated_isn(
     filePath=DM_FILE_PATH,
     workflow=DM_WORKFLOW_NAME,
     acquisition_time=DEFAULT_SIMULATED_ACQUISITION_TIME,
@@ -79,7 +79,7 @@ def m15_simulated_ixn(
     _md = dict(
         title=TITLE,
         description=(
-            "Simulate tomo acquisition for IXN and start DM workflow."
+            "Simulate tomo acquisition for ISN and start DM workflow."
         ),
         workflow=workflow,
         datetime=str(datetime.datetime.now()),
@@ -93,7 +93,7 @@ def m15_simulated_ixn(
     _md.update(md)
 
     logger.info(
-        "In m15_simulated_ixn() plan."
+        "In m15_simulated_isn() plan."
         f" {filePath=}"
         f" (exists: {image_path.exists()})"
         f" {acquisition_time=} s"
@@ -151,7 +151,7 @@ def m15_simulated_ixn(
             yield f
 
     def collect_full_series():
-        logger.info("Bluesky plan m15_simulated_ixn() starting.")
+        logger.info("Bluesky plan m15_simulated_isn() starting.")
         for i, data_file in enumerate(get_data_file(), start=1):
             _md["data_file"] = data_file.name
             dm_workflow = DM_WorkflowConnector(name=f"dmwf_{i}", labels=["DM"])
@@ -161,7 +161,7 @@ def m15_simulated_ixn(
             except TimeoutError as exc_:
                 logger.error("Data File: %s, error: %s", str(data_file), exc_)
             logger.info("Bluesky plan workflow complete. %s", dm_workflow)
-        logger.info("Bluesky plan m15_simulated_ixn() series complete.")
+        logger.info("Bluesky plan m15_simulated_isn() series complete.")
 
         yield from wait_workflows()  # TODO: add kwarg ``wait=True`` ?  It's an option.
         for wf in wf_cache.values():
