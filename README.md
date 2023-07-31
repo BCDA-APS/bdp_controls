@@ -50,3 +50,24 @@ See [README](/qserver/README.md)
 See the [README](/tiled/README.md) in the `tiled` section.
 
 - https://github.com/bluesky/tiled
+
+## Instructions to repeat last successful bluesky run
+
+These commands in sequence in a terminal starting from an APS workstation with X11 running.
+
+1. `ssh -X bdp@terrier`
+2. `become_bluesky`
+3. `cd ~/qserver/`
+4. `queue-monitor &`
+    1. ... the GUI starts in its own window
+    2. click `Connect` in the Queue Server box on the `Monitor Queue` side tab
+    3. click on the `Edit and Control Queue` side tab
+    4. In the `HISTORY` table, find the last `completed` run and click it
+    5. Above the table, click the `Copy to Queue` button
+    6. New item should appear in the `QUEUE` table
+    7. In the `Queue` section (near top of window), click `Start` button
+    8. Watch things work...  Console output will indicate when things are done.
+    9. Under `RE Manager Status`, all is done when `Manager state` is `IDLE`
+5. `qserver-console-monitor`
+    1. Leave this running in the terminal window.
+       It shows any/all output from the bluesky queueserver.
