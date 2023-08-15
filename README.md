@@ -71,3 +71,17 @@ These commands in sequence in a terminal starting from an APS workstation with X
 5. `qserver-console-monitor`
     1. Leave this running in the terminal window.
        It shows any/all output from the bluesky queueserver.
+
+### When the steps to open the RunEngine appear to stall ...
+
+Sometimes, the queueserver stalls while trying to open the RunEngine environment.  Have not yet identified the root cause.  This is the symptom of a stuck process.  To resolve:
+
+- login to `bdp@terrier`
+- `become_bluesky`
+- `cd qserver`
+- `export BDP_DEMO=M15`
+- `./qserver.sh restart`
+
+The export step is easily forgotten.  This step configures the 
+bluesky devices & plans for the current demo.  Use `M16` as the
+value for the BDP M16 milestone in September 2023.
