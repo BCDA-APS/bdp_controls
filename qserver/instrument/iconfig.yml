@@ -10,8 +10,8 @@ DATABROKER_CATALOG: bdp2022
 
 RUNENGINE_METADATA:
   beamline_id: BDP
-  instrument_name: APS-U Beamline Data Pipelines project in 2022
-  proposal_id: bdp2022
+  instrument_name: APS-U Beamline Data Pipelines project in 2023
+  proposal_id: bdp2023
   milestone: BDP demo
 
 # device PVs

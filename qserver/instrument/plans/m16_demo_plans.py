@@ -1,29 +1,28 @@
 """
-ISN (tomocupy) demo for BDP Project Milestone M15
+ISN (tomocupy) demo for BDP Project Milestone M16
 
 DATA
 
 A single HDF5 file is used for this demo:
-
-    ~/voyager/BDP/tomocupy-demo/data/Sm_c_3t_7p5x_pink_a_010.h5
+    /gdata/bdp/tomocupy-demo/data/Sm_c_3t_7p5x_pink_a_010.h5
 
 PROCEDURE
 
 - Before starting the `queueserver` process:
-  - define `export BDP_DEMO=M15` in the bash shell
+  - define `export BDP_DEMO=M16` in the bash shell
 - Bluesky simulates data acquisition (using existing data folders)
   - for the demo: do not overwrite original source data
   - raw data:
     - use the one HDF5 file described above as workflow `filePath` parameter
     - call DM workflow once ALL data for a row is ready
-- DM workflow `tomocupy` initiates data processing
+- DM workflow `tomocupy-polaris` initiates data processing
   - The workflow has defaults for all other parameters
 - ImageMagick's `display` (or `imagej` but is not on terrier) can be used to visualize the reconstruction results
   - `~/voyager/BDP/tomocupy-demo/analysis/*.tiff`
 """
 
 __all__ = [
-    "m15_simulated_isn",
+    "m16_simulated_isn",
 ]
 
 import logging
@@ -51,18 +50,14 @@ MINUTE = 60 * SECOND
 DEFAULT_WAITING_TIME = 30 * MINUTE  # bluesky will raise TimeoutError if DM is not done
 
 TITLE = "Simulate ISN data collection and processing with tomocupy"
-DM_WORKFLOW_NAME = "tomocupy"
+DM_WORKFLOW_NAME = "tomocupy-polaris"
 DEFAULT_SIMULATED_ACQUISITION_TIME = 5 * SECOND
 WAIT_FOR_PREVIOUS_WORKFLOWS = False
-
-VOYAGER = pathlib.Path().home() / "voyager" / "BDP"
-TOMOCUPY_PATH = VOYAGER / "tomocupy-demo"
-DATA_PATH = TOMOCUPY_PATH / "data"
-TEST_FILE = DATA_PATH / "Sm_c_3t_7p5x_pink_a_010.h5"
+TEST_FILE = pathlib.Path('/gdata/bdp/BDP/tomocupy-demo/data/Sm_c_3t_7p5x_pink_a_010.h5')
 DM_FILE_PATH = str(TEST_FILE)
 
 
-def m15_simulated_isn(
+def m16_simulated_isn(
     filePath=DM_FILE_PATH,
     workflow=DM_WORKFLOW_NAME,
     acquisition_time=DEFAULT_SIMULATED_ACQUISITION_TIME,
@@ -74,7 +69,6 @@ def m15_simulated_isn(
     """
     Simulate Tomo data collection and processing with tomocupy.
     """
-
     image_path = pathlib.Path(filePath)
     _md = dict(
         title=TITLE,
@@ -93,7 +87,7 @@ def m15_simulated_isn(
     _md.update(md)
 
     logger.info(
-        "In m15_simulated_isn() plan."
+        "In m16_simulated_isn() plan."
         f" {filePath=}"
         f" (exists: {image_path.exists()})"
         f" {acquisition_time=} s"
@@ -132,7 +126,7 @@ def m15_simulated_isn(
                     yield from bps.sleep(period)
 
     def report_tomocupy_output():
-        stage_id = "03-TOMOCUPY"
+        stage_id = "03-DONE"
 
         for wf in wf_cache.values():
             job = wf.getJob()
@@ -151,7 +145,7 @@ def m15_simulated_isn(
             yield f
 
     def collect_full_series():
-        logger.info("Bluesky plan m15_simulated_isn() starting.")
+        logger.info("Bluesky plan m16_simulated_isn() starting.")
         for i, data_file in enumerate(get_data_file(), start=1):
             _md["data_file"] = data_file.name
             dm_workflow = DM_WorkflowConnector(name=f"dmwf_{i}", labels=["DM"])
@@ -161,7 +155,7 @@ def m15_simulated_isn(
             except TimeoutError as exc_:
                 logger.error("Data File: %s, error: %s", str(data_file), exc_)
             logger.info("Bluesky plan workflow complete. %s", dm_workflow)
-        logger.info("Bluesky plan m15_simulated_isn() series complete.")
+        logger.info("Bluesky plan m16_simulated_isn() series complete.")
 
         yield from wait_workflows()  # TODO: add kwarg ``wait=True`` ?  It's an option.
         for wf in wf_cache.values():

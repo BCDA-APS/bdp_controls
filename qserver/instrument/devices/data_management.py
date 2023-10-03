@@ -166,6 +166,7 @@ class DM_WorkflowConnector(Device):
 
         wfargs = self.workflow_args.copy()
         wfargs.update(kwargs)
+        logger.info(f"args {wfargs}")
         self.start_time = time.time()
         self._report_deadline = self.start_time
 
@@ -195,6 +196,7 @@ class DM_WorkflowConnector(Device):
             logger.info(
                 "run DM workflow: %s with timeout=%s s", self.workflow.get(), timeout
             )
+            logger.info(f"args: {wfargs}")
             self.job = self.api.startProcessingJob(
                 workflowOwner=self.owner.get(),
                 workflowName=workflow,
