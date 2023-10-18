@@ -12,7 +12,7 @@ RUNENGINE_METADATA:
   beamline_id: BDP
   instrument_name: APS-U Beamline Data Pipelines project in 2023
   proposal_id: bdp2023
-  milestone: BDP demo
+  milestone: M18 BDP demo
 
 # device PVs
 IOC_PREFIX_ADPVA: "13PVA1:"

@@ -25,6 +25,10 @@ elif iconfig.get("BDP_DEMO") == "M16":
 elif iconfig.get("BDP_DEMO") == "M17":
     from .m16_demo_plans import m16_simulated_isn
     from .m17_demo_plans import m17_simulated_rsmap
+elif iconfig.get("BDP_DEMO") == "M18":
+    from .m16_demo_plans import m16_simulated_isn
+    from .m17_demo_plans import m17_simulated_rsmap
+    from .m18_demo_plans import m18_simulated_midas_ff
 else:
     from .m6_demo_plans import *
 
