@@ -136,7 +136,7 @@ class DM_WorkflowConnector(Device):
     @property
     def idle(self):
         """Is DM Processing idle?"""
-        return self.status.get() in (NOT_RUN_YET, "done")
+        return self.status.get() in (NOT_RUN_YET, "done", "failed")
 
     def report_status(self, t_offset=None):
         """Status report."""
