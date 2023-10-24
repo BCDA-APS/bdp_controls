@@ -25,6 +25,7 @@ from ophyd import Component, Device, Signal
 DM_STATION_NAME = str(os.environ.get("DM_STATION_NAME", "terrier")).lower()
 NOT_AVAILABLE = "-n/a-"
 NOT_RUN_YET = "not_run"
+POLLING_PERIOD_S = 1.0
 REPORT_PERIOD_DEFAULT = 10
 REPORT_PERIOD_MIN = 1
 STARTING = "running"
@@ -38,6 +39,7 @@ class DM_WorkflowConnector(Device):
     The DM workflow dictionary of arguments (``workflow_args``)
     needs special attention.  Python's ``dict`` structure is not
     compatible with MongoDB.  In turn, ophyd does not support it.
+
     A custom plan can choose how to use `the `workflow_args`` dictionary:
         - use with DM workflow, as planned
         - add ``workflow_args`` to the start metadata
@@ -51,7 +53,19 @@ class DM_WorkflowConnector(Device):
                 "workflow_args"
             )
 
-    autosummary?
+    .. autosummary:
+
+        ~_update_processing_data
+        ~api
+        ~getJob
+        ~idle
+        ~processing_jobs
+        ~put_if_different
+        ~report_processing_stages
+        ~report_status
+        ~run_as_plan
+        ~start_workflow
+        ~workflows
     """
 
     job = None  # DM processing job (must update during workflow execution)
@@ -68,7 +82,7 @@ class DM_WorkflowConnector(Device):
     stage_id = Component(Signal, value=NOT_RUN_YET)
     status = Component(Signal, value=NOT_RUN_YET)
 
-    polling_period = Component(Signal, value=0.1, kind="config")
+    polling_period = Component(Signal, value=POLLING_PERIOD_S, kind="config")
     reporting_period = Component(Signal, value=REPORT_PERIOD_DEFAULT, kind="config")
     concise_reporting = Component(Signal, value=True, kind="config")
 
@@ -117,6 +131,7 @@ class DM_WorkflowConnector(Device):
         if self.job_id.get() == NOT_RUN_YET:
             return
         # fmt: off
+        # logger.debug("periodic update of job progress: %.3f", time.time())
         self.job = self.getJob()
         # fmt: on
 
@@ -136,7 +151,7 @@ class DM_WorkflowConnector(Device):
     @property
     def idle(self):
         """Is DM Processing idle?"""
-        return self.status.get() in (NOT_RUN_YET, "done", "failed")
+        return self.status.get() in (NOT_RUN_YET, "done", "failed", "aborted")
 
     def report_status(self, t_offset=None):
         """Status report."""
