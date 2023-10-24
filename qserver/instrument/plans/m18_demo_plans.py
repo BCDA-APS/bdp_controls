@@ -18,6 +18,16 @@ PROCEDURE
 - DM workflow `midas-ff` initiates data processing
   - ... other parameters
 - (???) can be used to visualize the reconstruction results
+
+HINTS
+
+To check on details for a specific workflow job (by its ID),
+try this command::
+
+    ~/DM/bin/dm-list-processing-jobs \
+        --display-keys=ALL \
+        --display-format=pprint \
+        id:WORKFLOW_UUID
 """
 
 plan_name = "m18_simulated_midas_ff"
@@ -211,7 +221,6 @@ def m18_simulated_midas_ff(
             boxSize=boxSize,
             ps_template_file_path=ps_template_file_path,
         )
-        # FIXME: workflow arguments
         yield from write_stream([dm_workflow], "dm_workflow")
 
     def collect_full_series():
