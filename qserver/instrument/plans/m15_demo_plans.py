@@ -39,6 +39,7 @@ import pathlib
 import pyRestTable
 from apstools.devices import make_dict_device
 from apstools.plans import write_stream
+
 # from bluesky import plans as bp
 from bluesky import plan_stubs as bps
 from bluesky import preprocessors as bpp
@@ -78,9 +79,7 @@ def m15_simulated_isn(
     image_path = pathlib.Path(filePath)
     _md = dict(
         title=TITLE,
-        description=(
-            "Simulate tomo acquisition for ISN and start DM workflow."
-        ),
+        description=("Simulate tomo acquisition for ISN and start DM workflow."),
         workflow=workflow,
         datetime=str(datetime.datetime.now()),
         data_management=dict(

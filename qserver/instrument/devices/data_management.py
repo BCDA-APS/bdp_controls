@@ -221,7 +221,7 @@ class DM_WorkflowConnector(Device):
             logger.info(f"DM workflow started: {self}")
             # wait for workflow to finish
             deadline = time.time() + timeout
-            while time.time() < deadline and self.status.get() not in "done failed timeout".split():
+            while time.time() < deadline and self.status.get() not in "done failed timeout aborted".split():
                 self._update_processing_data()
                 if "_report_deadline" not in dir(self) or time.time() >= self._report_deadline:
                     _reporter()

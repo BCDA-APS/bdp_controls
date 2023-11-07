@@ -28,6 +28,14 @@ try this command::
         --display-keys=ALL \
         --display-format=pprint \
         id:WORKFLOW_UUID
+
+Or the most recent job::
+
+    ~/DM/bin/dm-get-last-processing-job   --display-format=pprint
+
+Note that these commands might fail with an ImportError if run from
+a conda environment.  Check that `CONDA_SHLVL=1`: `conda deactivate`
+until you get that.
 """
 
 plan_name = "m18_simulated_midas_ff"
