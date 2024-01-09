@@ -5,8 +5,11 @@ Support for BDP demos.
 import datetime
 import logging
 import pathlib
+import subprocess
+import sys
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 logger.info(__file__)
 print(__file__)
@@ -104,16 +107,118 @@ def data_measurement_plan(acquisition_time, *args):
     print(f"Collected: {args=}")
 
 
-def get_workflow_last_stage(workflow):
+def get_workflow_last_stage(workflow_dir, wf_file=None):
     import ast
 
     if not WF_BASE.exists():
         raise FileNotFoundError(f"DM workflow directory {WF_BASE} not found.")
-    path = WF_BASE / workflow / f"workflow-{workflow}.py"
+
+    # In some workflows, the Python code is named the same as the directory.
+    # Other workflow directories might have more than one workflow.
+    wf_file = wf_file or f"workflow-{workflow_dir}.py"
+    path = WF_BASE / workflow_dir / wf_file
     if not path.exists():
         raise FileNotFoundError(f"DM workflow file {path} not found.")
+
     with open(path) as f:
         config = ast.literal_eval(f.read())
         stages = config.get("stages", {})
         if len(stages) > 0:
             return list(stages)[-1]
+
+
+def run_blocking_function(function, *args, **kwargs):
+    """Override from apstools."""
+    from apstools.utils import run_in_thread
+    POLL_DELAY = 0.000_05
+
+    @run_in_thread
+    def internal():
+        logger.debug("...internal...")
+        result = function(*args, **kwargs)
+        logger.debug("%s(%s, %s) result=%s", function, args, kwargs, result)
+
+    logger.debug(f"run_blocking_function(): function=%s  args=%s  kwargs=%s", function, args, kwargs)
+    thread = internal()
+    while thread.is_alive():
+        yield from bps.sleep(POLL_DELAY)
+
+
+def run_workflow_command(
+    results, wf_dir, shell_command, *args, raises=False, env=None, **kwargs
+):
+    """Run a shell command as a bluesky plan."""
+    from apstools.utils import run_in_thread
+
+    if not isinstance(results, dict):
+        raise TypeError("'results' must be a dictionary.")
+
+    POLL_DELAY = 0.000_05
+
+    script = WF_BASE / wf_dir / shell_command
+    logger.debug("run_workflow_command(): path=%s", script)
+    if not script.exists():
+        raise FileNotFoundError(f"Workflow executable {script} not found.")
+
+    @run_in_thread
+    def threaded_process():
+        command = f"{script} " + " ".join([a for a in args])
+        logger.debug(f"run_workflow_command(): {command=}")
+
+        process = subprocess.Popen(
+            command,
+            shell=True,
+            env=env,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            **kwargs,
+        )
+
+        stdout, stderr = process.communicate()
+        results["stdout"] = stdout
+        results["stderr"] = stderr
+
+        if len(stderr) > 0:
+            emsg = f"subprocess.Popen({command}) returned error:\n{stderr}"
+            logger.error(emsg)
+            if raises:
+                raise RuntimeError(emsg)
+
+        logger.debug(f"run_workflow_command(): {stdout=}")
+
+    def as_plan():
+        thread = threaded_process()
+        while thread.is_alive():
+            yield from bps.sleep(POLL_DELAY)
+
+    logger.debug(f"run_workflow_command(): {script=}  {args=}  {kwargs=}")
+    yield from as_plan()
+
+
+def share_bluesky_metadata_with_dm(experimentName="", runId="", uid=None):
+    """Once a bluesky run ends, share its metadata with APS DM."""
+    import yaml
+    from dm import CatApiFactory
+
+    from ..qserver_framework import cat
+
+    if len(experimentName.strip()) == 0:
+        experimentName = cat.name  # databroker catalog name
+    if len(runId.strip()) == 0:
+        run = cat[uid or -1]
+        runId = f"uid_{run.metadata['start']['uid'][:8]}"  # first part of run uid
+
+    runInfo = dict(
+        experimentName=experimentName,
+        runId=runId,
+        metadata={k: getattr(run, k).metadata for k in run},  # all streams
+    )
+    logger.info("Metadata shared to DM: %s", runInfo)
+
+    # TODO: only upload if we have a workflow
+    api = CatApiFactory.getRunCatApi()
+    dm_md = api.addExperimentRun(runInfo)
+
+    # confirm
+    dm_mdl = api.getExperimentRuns(experimentName)

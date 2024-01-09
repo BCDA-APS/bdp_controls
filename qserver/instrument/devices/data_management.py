@@ -1,7 +1,9 @@
 """
 Connect with APS Data Management workflows.
 
-from: https://github.com/APS-1ID-MPE/hexm-bluesky/blob/main/instrument/devices/data_management.py
+DM API: https://git.aps.anl.gov/DM/dm-docs/-/wikis/DM/Beamline-Services/API-Reference/DS-Service
+
+Original code hoisted from: https://github.com/APS-1ID-MPE/hexm-bluesky/blob/main/instrument/devices/data_management.py
 """
 
 __all__ = """

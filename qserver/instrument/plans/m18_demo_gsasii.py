@@ -13,10 +13,11 @@ PROCEDURE
 - Bluesky:
   - start PVA server with PV: "pvapy:GSASII"
   - start a DM workflow
-  - iterate through series of data files
-    - assign uniqueID to each file
-    - update pv with uniqueID and file name (!)
-    - short (1 s) delay
+  - simulate data acquisition
+    - iterate through series of data files
+      - assign uniqueID to each file
+      - update PV with uniqueID and file name (!)
+      - short (1 s) delay
   - once series is finished
     - wait a short time (5-10s)
     - send STOP command on control channel

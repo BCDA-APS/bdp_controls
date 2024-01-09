@@ -6,9 +6,9 @@ print(__file__)
 
 from .._iconfig_dict import iconfig
 
-print(f"{iconfig.get('BDP_DEMO')=}")
+print(f"{__name__} {iconfig.get('BDP_DEMO')=}")
 # define the devices
-if iconfig.get("BDP_DEMO") != "M14":
+if iconfig.get("BDP_DEMO") in "M15 M16 M17 M18 M19".split():
     from .aps_source import *
     from .calculation_records import *
     from .data_management import *
