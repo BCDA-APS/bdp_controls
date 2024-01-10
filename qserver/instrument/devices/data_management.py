@@ -15,14 +15,14 @@ import logging
 import os
 import time
 
+import pyRestTable
+from apstools.utils import run_in_thread
+from ophyd import Component, Device, Signal
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)  # allow any log content at this level
 logger.info(__file__)
 print(__file__)
-
-from apstools.utils import run_in_thread
-from dm import ProcApiFactory
-from ophyd import Component, Device, Signal
 
 DM_STATION_NAME = str(os.environ.get("DM_STATION_NAME", "terrier")).lower()
 NOT_AVAILABLE = "-n/a-"
@@ -59,6 +59,8 @@ class DM_WorkflowConnector(Device):
 
         ~_update_processing_data
         ~api
+        ~ds_api
+        ~proc_api
         ~getJob
         ~idle
         ~processing_jobs
@@ -71,7 +73,8 @@ class DM_WorkflowConnector(Device):
     """
 
     job = None  # DM processing job (must update during workflow execution)
-    _api = None  # DM common API
+    _ds_api = None  # DM data storage API
+    _proc_api = None  # DM processing API
 
     owner = Component(Signal, value=DM_STATION_NAME, kind="config")
     workflow = Component(Signal, value="")
@@ -122,7 +125,7 @@ class DM_WorkflowConnector(Device):
     def getJob(self, job_id=None):
         """Get the current processing job object."""
         job_id = job_id or self.job_id.get()
-        return self.api.getProcessingJobById(self.owner.get(), job_id)
+        return self.proc_api.getProcessingJobById(self.owner.get(), job_id)
 
     def _update_processing_data(self):
         """
@@ -144,11 +147,24 @@ class DM_WorkflowConnector(Device):
         self.put_if_different(self.status, rep.get("status", NOT_AVAILABLE))
 
     @property
-    def api(self):
+    def ds_api(self):
+        """Local copy of DM Data Storage API object."""
+        from dm import DsApiFactory
+
+        if self._ds_api is None:
+            self._ds_api = DsApiFactory.getExperimentDsApi()
+        return self._ds_api
+
+    @property
+    def proc_api(self):
         """Local copy of DM Processing API object."""
-        if self._api is None:
-            self._api = ProcApiFactory.getWorkflowProcApi()
-        return self._api
+        from dm import ProcApiFactory
+
+        if self._proc_api is None:
+            self._proc_api = ProcApiFactory.getWorkflowProcApi()
+        return self._proc_api
+
+    api = proc_api  # backwards compatibility
 
     @property
     def idle(self):
@@ -214,7 +230,7 @@ class DM_WorkflowConnector(Device):
                 "run DM workflow: %s with timeout=%s s", self.workflow.get(), timeout
             )
             logger.info(f"args: {wfargs}")
-            self.job = self.api.startProcessingJob(
+            self.job = self.proc_api.startProcessingJob(
                 workflowOwner=self.owner.get(),
                 workflowName=workflow,
                 argsDict=wfargs,
@@ -271,19 +287,17 @@ class DM_WorkflowConnector(Device):
     @property
     def processing_jobs(self):
         """Return the list of processsing jobs."""
-        return self.api.listProcessingJobs(self.owner.get())
+        return self.proc_api.listProcessingJobs(self.owner.get())
 
     @property
     def workflows(self):
         """Return the list of workflows."""
-        return self.api.listWorkflows(self.owner.get())
+        return self.proc_api.listWorkflows(self.owner.get())
 
     def report_processing_stages(self, truncate=40):
         """
         Print a table about each stage of the workflow process.
         """
-        import pyRestTable
-
         if self.job is None:
             return
 
